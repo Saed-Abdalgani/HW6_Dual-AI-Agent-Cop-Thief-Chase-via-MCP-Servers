@@ -1,0 +1,53 @@
+# config/config.yaml — Authoritative runtime configuration
+# All tunables live here. Secrets (API keys, tokens) come from environment variables.
+# See .env-example for the full list of required env vars.
+#
+# Traces: FR-C1, FR-C2, PLAN §10.1 — T-P0-09, T-P0-12
+
+# ── Board ────────────────────────────────────────────────────────────────────
+grid_size: [5, 5]       # [rows, cols] — any positive integer pair; default 5×5
+max_moves: 25           # Maximum turns per sub-game before thief wins by escape
+num_games: 6            # Number of VALID sub-games that constitute a full game
+max_barriers: 5         # Maximum barriers the cop may place per sub-game
+
+# ── Scoring ──────────────────────────────────────────────────────────────────
+scoring:
+  cop_win: 20           # Points awarded to cop when cop wins sub-game
+  thief_win: 10         # Points awarded to thief when thief wins sub-game
+  cop_loss: 5           # Points awarded to cop when cop loses sub-game
+  thief_loss: 5         # Points awarded to thief when thief loses sub-game
+
+# ── Game rules ───────────────────────────────────────────────────────────────
+start_mode: random      # "random" | "strategy" — how initial positions are chosen
+thief_moves_first: true # Turn order: thief moves before cop each round
+discount_gamma: 0.95    # Discount factor γ for Q-learning (FR-D2, PRD §14)
+
+# ── Decision strategy ────────────────────────────────────────────────────────
+strategy: heuristic     # "heuristic" | "qlearning" | "llm" — chosen strategy
+
+# ── LLM configuration ────────────────────────────────────────────────────────
+llm:
+  provider: openai      # "openai" | "anthropic" | "gemini" | "ollama"
+  model: gpt-4o-mini    # Model name for the chosen provider
+  timeout_s: 30         # Per-call timeout in seconds
+  base_url: null        # Optional: override base URL (e.g. for Ollama localhost)
+
+# ── MCP server URLs ──────────────────────────────────────────────────────────
+mcp:
+  cop_url: "http://localhost:8001"    # Cop MCP server URL (local or cloud)
+  thief_url: "http://localhost:8002"  # Thief MCP server URL (local or cloud)
+
+# ── API Gatekeeper ───────────────────────────────────────────────────────────
+gatekeeper:
+  rate_limit_per_target: 5   # Max requests/second per target URL (token bucket)
+  max_retries: 3             # Max retry attempts on transient failure
+  queue_size: 64             # Max in-flight requests before backpressure kicks in
+  timeout_s: 30              # Per-call timeout in seconds
+
+# ── Email / reporting ────────────────────────────────────────────────────────
+email:
+  to: "rmisegal+uoh26b@gmail.com"   # Destination address for JSON report (FR-E5)
+
+# ── Misc ─────────────────────────────────────────────────────────────────────
+timezone: "Asia/Jerusalem"  # Timezone for timestamps in the report
+seed: null                  # RNG seed for deterministic runs (null = random)

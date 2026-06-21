@@ -1,0 +1,56 @@
+# .github/workflows/ci.yml — T-P0-07
+# CI gate: lint (Ruff) + unit/integration tests + coverage ≥ 85%
+# Runs on every push and pull request targeting main/master.
+
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  quality:
+    name: Lint & Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Ruff lint (zero violations required)
+        run: uv run ruff check .
+
+      - name: Ruff format check
+        run: uv run ruff format --check .
+
+      - name: Run tests with coverage
+        env:
+          # Provide dummy secrets so config/auth loading doesn't fail
+          LLM_API_KEY: test-key
+          MCP_COP_TOKEN: test-cop-token
+          MCP_THIEF_TOKEN: test-thief-token
+        run: uv run pytest tests/
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-html-py${{ matrix.python-version }}
+          path: htmlcov/

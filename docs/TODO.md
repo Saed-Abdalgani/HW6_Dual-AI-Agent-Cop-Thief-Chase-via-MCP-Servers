@@ -56,7 +56,7 @@ A task is **Done** only when ALL of the following hold:
 
 | Phase | Theme | Priority | Status | Exit criterion |
 |-------|-------|----------|--------|----------------|
-| P0 | Project scaffold + config + Gatekeeper | P0 | `[ ]` | `uv sync` works; config validates; Ruff clean |
+| P0 | Project scaffold + config + Gatekeeper | P0 | `[x]` | `uv sync` works; config validates; Ruff clean |
 | P1 | Core game engine | P1 | `[ ]` | Engine unit-tested, deterministic with seed |
 | P2 | Two MCP servers (cop, thief) | P1 | `[ ]` | Tools callable w/ token; unauth rejected |
 | P3 | Orchestrator + local E2E | P1 | `[ ]` | 6 sub-games run locally, 0 manual steps |
@@ -88,10 +88,10 @@ A task is **Done** only when ALL of the following hold:
 These are the PRD §17 / PLAN §21 open questions. Capture answers here before deep implementation.
 
 - [ ] **D-01 (P0)** — Confirm `group_name`, `students[]`, `github_repo`. _Traces:_ FR-E5, report contract.
-- [ ] **D-02 (P0)** — Choose LLM path: cloud API (Option 1) vs hybrid Ollama (Option 3). _Traces:_ FR-LLM1/2.
-- [ ] **D-03 (P0)** — Choose cloud platform (Prefect Cloud vs alternative). _Traces:_ G6, PLAN §15.2.
-- [ ] **D-04 (P0)** — Choose Gmail auth (OAuth / service account / app-password). _Traces:_ FR-E3.
-- [ ] **D-05 (P0)** — Choose config format (`config.yaml` vs `config.json`). _Traces:_ FR-C1.
+- [x] **D-02 (P0)** — Choose LLM path: cloud API (Option 1) vs hybrid Ollama (Option 3). _Decision: cloud API default; provider/model from config (pluggable)._ _Traces:_ FR-LLM1/2.
+- [ ] **D-03 (P0)** — Choose cloud platform (Prefect Cloud vs alternative). _Traces:_ G6, PLAN §15.2. _(deferred to P7)_
+- [ ] **D-04 (P0)** — Choose Gmail auth (OAuth / service account / app-password). _Traces:_ FR-E3. _(deferred to P8)_
+- [x] **D-05 (P0)** — Choose config format (`config.yaml` vs `config.json`). _Decision: YAML._ _Traces:_ FR-C1.
 - [ ] **D-06 (P1)** — Decide GUI framework (Pygame / Tkinter / Streamlit). _Traces:_ FR-G1.
 - [ ] **D-07 (P3)** — Decide whether to implement Q-learning. _Traces:_ FR-D2.
 
@@ -102,74 +102,74 @@ These are the PRD §17 / PLAN §21 open questions. Capture answers here before d
 **Goal:** Establish the `uv`-managed project skeleton, configuration loading, secrets handling, the
 central API Gatekeeper shell, and CI quality gates so every later phase inherits the standards.
 
-**Priority:** P0 · **Status:** `[ ]` · **Traces:** PLAN §1, §5, §8; PRD §10, §11, NFR-5..9.
+**Priority:** P0 · **Status:** `[x]` · **Traces:** PLAN §1, §5, §8; PRD §10, §11, NFR-5..9.
 
 ### Tooling & repository setup
-- [ ] **T-P0-01 (P0)** — Initialize `uv` project (`pyproject.toml`, `uv.lock`).
+- [x] **T-P0-01 (P0)** — Initialize `uv` project (`pyproject.toml`, `uv.lock`).
   - DoD: `uv sync` succeeds on a clean checkout; Python version pinned.
-- [ ] **T-P0-02 (P0)** — Create the full directory tree from `PLAN.md` §5.
+- [x] **T-P0-02 (P0)** — Create the full directory tree from `PLAN.md` §5.
   - Sub: `src/cop_thief/{sdk,services,shared,mcp_servers,gui,cli}`, `tests/{unit,integration}`,
     `docs/`, `config/`, `data/`, `results/`, `assets/`, `notebooks/`.
   - DoD: All packages have `__init__.py`; tree matches PLAN exactly.
-- [ ] **T-P0-03 (P0)** — Add `.gitignore` (ignore `.env`, `*.key`, `*.pem`, caches, `data/`, secrets).
+- [x] **T-P0-03 (P0)** — Add `.gitignore` (ignore `.env`, `*.key`, `*.pem`, caches, `data/`, secrets).
   - DoD: `git status` never shows secret files. _Traces:_ NFR-2, Security.
-- [ ] **T-P0-04 (P0)** — Create `.env-example` listing all required env var **names** (no values).
+- [x] **T-P0-04 (P0)** — Create `.env-example` listing all required env var **names** (no values).
   - Sub: `LLM_API_KEY`, `MCP_COP_TOKEN`, `MCP_THIEF_TOKEN`, `GMAIL_*`. _Traces:_ FR-C3.
-- [ ] **T-P0-05 (P1)** — Configure Ruff in `pyproject.toml` (line length, rules).
+- [x] **T-P0-05 (P1)** — Configure Ruff in `pyproject.toml` (line length, rules).
   - DoD: `uv run ruff check .` runs and is clean on the skeleton.
-- [ ] **T-P0-06 (P1)** — Configure pytest + coverage in `pyproject.toml` (fail under 85%).
+- [x] **T-P0-06 (P1)** — Configure pytest + coverage in `pyproject.toml` (fail under 85%).
   - DoD: `uv run pytest` runs; coverage threshold wired.
-- [ ] **T-P0-07 (P2)** — Add CI workflow (lint + test + coverage gate).
+- [x] **T-P0-07 (P2)** — Add CI workflow (lint + test + coverage gate).
   - DoD: CI fails on Ruff violations or coverage < 85%.
 
 ### Configuration subsystem (`shared/config.py`)
-- [ ] **T-P0-08 (P0)** — Implement `Config` loader for the chosen format (D-05).
+- [x] **T-P0-08 (P0)** — Implement `Config` loader for the chosen format (D-05).
   - DoD: Loads `config/config.yaml` (or json); returns typed object. _Traces:_ FR-C1.
-- [ ] **T-P0-09 (P0)** — Define the authoritative config schema with all PRD §11 keys + defaults.
+- [x] **T-P0-09 (P0)** — Define the authoritative config schema with all PRD §11 keys + defaults.
   - Sub: `grid_size`, `max_moves`, `num_games`, `max_barriers`, `scoring.*`, `start_mode`,
     `thief_moves_first`, `discount_gamma`, `strategy`, `llm.*`, `mcp.*`, `gatekeeper.*`,
     `email.to`, `timezone`, `seed`. _Traces:_ FR-C2, PLAN §10.1.
-- [ ] **T-P0-10 (P1)** — Validate config (types, ranges, required keys) with clear errors.
+- [x] **T-P0-10 (P1)** — Validate config (types, ranges, required keys) with clear errors.
   - DoD: Invalid config raises actionable error; tested. _Traces:_ NFR (input validation).
-- [ ] **T-P0-11 (P1)** — Load secrets strictly from env vars (never from config files).
+- [x] **T-P0-11 (P1)** — Load secrets strictly from env vars (never from config files).
   - DoD: Missing required secret fails fast with safe message. _Traces:_ FR-C3, Security.
-- [ ] **T-P0-12 (P1)** — Create a sample `config/config.yaml` with documented defaults.
+- [x] **T-P0-12 (P1)** — Create a sample `config/config.yaml` with documented defaults.
   - DoD: Matches schema; comments explain each key.
 
 ### Constants & version
-- [ ] **T-P0-13 (P2)** — Implement `constants.py` (action vocabulary, agent names, enums).
+- [x] **T-P0-13 (P2)** — Implement `constants.py` (action vocabulary, agent names, enums).
   - Sub: actions `up,down,left,right,up_left,up_right,down_left,down_right,stay,place_barrier`.
   - DoD: No magic strings elsewhere reference these literals. _Traces:_ PLAN §9.
-- [ ] **T-P0-14 (P3)** — Implement `shared/version.py` (single source of version).
+- [x] **T-P0-14 (P3)** — Implement `shared/version.py` (single source of version).
 
 ### API Gatekeeper shell (`shared/gatekeeper.py`)
-- [ ] **T-P0-15 (P1)** — Define `Gatekeeper` class + `OutboundRequest`/`Response` types.
+- [x] **T-P0-15 (P1)** — Define `Gatekeeper` class + `OutboundRequest`/`Response` types.
   - DoD: Interface matches PLAN §8; no provider specifics leak in. _Traces:_ NFR-5.
-- [ ] **T-P0-16 (P1)** — Implement rate limiting (token-bucket per target) from config.
+- [x] **T-P0-16 (P1)** — Implement rate limiting (token-bucket per target) from config.
   - DoD: Exceeding rate is throttled, not dropped; tested. _Traces:_ `gatekeeper.rate_limit_*`.
-- [ ] **T-P0-17 (P1)** — Implement retries with exponential backoff + jitter (max from config).
+- [x] **T-P0-17 (P1)** — Implement retries with exponential backoff + jitter (max from config).
   - DoD: Transient failures retried up to limit; tested with mock.
-- [ ] **T-P0-18 (P1)** — Implement bounded queue + backpressure (queue size from config).
+- [x] **T-P0-18 (P1)** — Implement bounded queue + backpressure (queue size from config).
   - DoD: Saturation handled deterministically; tested.
-- [ ] **T-P0-19 (P1)** — Implement per-call timeout from config.
-- [ ] **T-P0-20 (P1)** — Implement structured logging with **secret redaction**.
+- [x] **T-P0-19 (P1)** — Implement per-call timeout from config.
+- [x] **T-P0-20 (P1)** — Implement structured logging with **secret redaction**.
   - DoD: Tokens/keys never appear in logs; verified by test. _Traces:_ NFR-10, Security.
 
 ### Logging & auth scaffolding
-- [ ] **T-P0-21 (P2)** — Implement `shared/logging.py` (structured logger factory).
-- [ ] **T-P0-22 (P1)** — Implement `shared/auth.py` skeleton: issue/verify/revoke token API.
+- [x] **T-P0-21 (P2)** — Implement `shared/logging.py` (structured logger factory).
+- [x] **T-P0-22 (P1)** — Implement `shared/auth.py` skeleton: issue/verify/revoke token API.
   - DoD: Tokens hashed at rest; verify/revoke unit-tested. _Traces:_ NFR-1/2, PLAN §16.
 
 ### Phase P0 tests
-- [ ] **T-P0-23 (P1)** — Unit tests: config load/validate (happy + invalid + missing secret).
-- [ ] **T-P0-24 (P1)** — Unit tests: Gatekeeper rate-limit, retry, timeout, backpressure (mocked).
-- [ ] **T-P0-25 (P1)** — Unit tests: auth issue/verify/revoke; log redaction.
+- [x] **T-P0-23 (P1)** — Unit tests: config load/validate (happy + invalid + missing secret).
+- [x] **T-P0-24 (P1)** — Unit tests: Gatekeeper rate-limit, retry, timeout, backpressure (mocked).
+- [x] **T-P0-25 (P1)** — Unit tests: auth issue/verify/revoke; log redaction.
 
 ### Phase P0 Definition of Done (exit criteria)
-- [ ] `uv sync` works from clean clone; structure matches PLAN §5.
-- [ ] Config loads + validates; secrets only from env; sample config present.
-- [ ] Gatekeeper shell functional (rate/retry/queue/timeout/redaction) and tested.
-- [ ] Ruff clean; coverage ≥ 85% on implemented modules; CI gate active.
+- [x] `uv sync` works from clean clone; structure matches PLAN §5.
+- [x] Config loads + validates; secrets only from env; sample config present.
+- [x] Gatekeeper shell functional (rate/retry/queue/timeout/redaction) and tested.
+- [x] Ruff clean; coverage ≥ 85% on implemented modules; CI gate active.
 
 ---
 
