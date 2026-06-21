@@ -252,54 +252,54 @@ PLAN §6, `docs/PRD_game_engine.md`.
 **Goal:** Build two **independent** MCP servers that expose **tools only** (no LLM inside), with
 token authentication and input validation, runnable locally on distinct ports.
 
-**Priority:** P1 · **Status:** `[ ]` · **Traces:** PRD §8.1 (FR-MCP1..5), PLAN §9, §16, NFR-1/2.
+**Priority:** P1 · **Status:** `[x]` · **Traces:** PRD §8.1 (FR-MCP1..5), PLAN §9, §16, NFR-1/2.
 
 ### Shared tool layer (`mcp_servers/tools.py`)
-- [ ] **T-P2-01 (P1)** — Implement `send_message(from, text)` tool → stores NL message for opponent.
+- [x] **T-P2-01 (P1)** — Implement `send_message(from, text)` tool → stores NL message for opponent.
   - DoD: Returns `{ok, msg_id}`; message persisted/queued. _Traces:_ FR-MCP3, FR-NL4, PLAN §10.2.
-- [ ] **T-P2-02 (P1)** — Implement `receive_message(for_agent)` → latest NL message.
+- [x] **T-P2-02 (P1)** — Implement `receive_message(for_agent)` → latest NL message.
   - DoD: Returns `{text, msg_id}` or empty; tested. _Traces:_ FR-MCP3.
-- [ ] **T-P2-03 (P1)** — Implement `update_position(agent, pos)` (engine-authoritative write).
+- [x] **T-P2-03 (P1)** — Implement `update_position(agent, pos)` (engine-authoritative write).
   - DoD: Rejects out-of-bounds/blocked; returns `{ok, pos}`. _Traces:_ FR-MCP3, FR-MCP4.
-- [ ] **T-P2-04 (P1)** — Implement `verify_position(agent)` → `{pos}`.
-- [ ] **T-P2-05 (P1)** — Implement `choose_action(agent, observation)` → `{action}`.
+- [x] **T-P2-04 (P1)** — Implement `verify_position(agent)` → `{pos}`.
+- [x] **T-P2-05 (P1)** — Implement `choose_action(agent, observation)` → `{action}`.
   - DoD: Returns a legal action token; LLM NOT called here. _Traces:_ FR-MCP2, PLAN §9.
-- [ ] **T-P2-06 (P1)** — Implement `apply_action(agent, action)` → `{state_delta, legal}` via engine.
+- [x] **T-P2-06 (P1)** — Implement `apply_action(agent, action)` → `{state_delta, legal}` via engine.
   - DoD: Illegal actions rejected with reason; tested. _Traces:_ FR-MCP4.
-- [ ] **T-P2-07 (P1)** — Implement `game_status()` → `{move_count, scores, over, winner}`.
-- [ ] **T-P2-08 (P1)** — Input validation for every tool (bounds, turn ownership, barrier budget).
+- [x] **T-P2-07 (P1)** — Implement `game_status()` → `{move_count, scores, over, winner}`.
+- [x] **T-P2-08 (P1)** — Input validation for every tool (bounds, turn ownership, barrier budget).
   - DoD: Malformed inputs return structured errors; tested. _Traces:_ FR-MCP4, Security.
 
 ### Cop server (`mcp_servers/cop_server.py`)
-- [ ] **T-P2-09 (P1)** — Wire cop server exposing the tool set on `mcp.cop_url` port from config.
+- [x] **T-P2-09 (P1)** — Wire cop server exposing the tool set on `mcp.cop_url` port from config.
   - DoD: Server starts on configured port; no hard-coded port. _Traces:_ FR-MCP1/5, FR-C1.
-- [ ] **T-P2-10 (P1)** — Cop-only capability: expose `place_barrier` action path.
+- [x] **T-P2-10 (P1)** — Cop-only capability: expose `place_barrier` action path.
   - DoD: Cop can request barrier; thief cannot. _Traces:_ FR-BR1, FR-BR5.
 
 ### Thief server (`mcp_servers/thief_server.py`)
-- [ ] **T-P2-11 (P1)** — Wire thief server exposing the tool set on `mcp.thief_url` port from config.
+- [x] **T-P2-11 (P1)** — Wire thief server exposing the tool set on `mcp.thief_url` port from config.
   - DoD: Independent process from cop server; distinct port. _Traces:_ FR-MCP1/5.
-- [ ] **T-P2-12 (P1)** — Ensure thief server rejects `place_barrier`.
+- [x] **T-P2-12 (P1)** — Ensure thief server rejects `place_barrier`.
   - DoD: Tested rejection. _Traces:_ FR-BR5.
 
 ### Authentication & security
-- [ ] **T-P2-13 (P1)** — Enforce token auth on every tool call (verify via `shared/auth.py`).
+- [x] **T-P2-13 (P1)** — Enforce token auth on every tool call (verify via `shared/auth.py`).
   - DoD: Missing/invalid token ⇒ rejected (401-equivalent); tested. _Traces:_ NFR-1, AC-7.
-- [ ] **T-P2-14 (P1)** — Support token revocation (revoked token rejected immediately).
+- [x] **T-P2-14 (P1)** — Support token revocation (revoked token rejected immediately).
   - DoD: Revoke then call ⇒ rejected; tested. _Traces:_ NFR-2, AC-7.
-- [ ] **T-P2-15 (P1)** — Route all server-side egress (if any) and logging through Gatekeeper/redaction.
+- [x] **T-P2-15 (P1)** — Route all server-side egress (if any) and logging through Gatekeeper/redaction.
   - DoD: No token/secret in server logs. _Traces:_ NFR-10.
 
 ### Phase P2 tests
-- [ ] **T-P2-16 (P1)** — Unit tests: each tool happy-path + invalid-input + auth-failure.
-- [ ] **T-P2-17 (P1)** — Integration test: start both servers locally; call tools with token.
-- [ ] **T-P2-18 (P1)** — Security test: unauth + revoked-token calls rejected on both servers.
+- [x] **T-P2-16 (P1)** — Unit tests: each tool happy-path + invalid-input + auth-failure.
+- [x] **T-P2-17 (P1)** — Integration test: start both servers locally; call tools with token.
+- [x] **T-P2-18 (P1)** — Security test: unauth + revoked-token calls rejected on both servers.
 
 ### Phase P2 Definition of Done (exit criteria)
-- [ ] Two independent servers run locally on distinct configured ports.
-- [ ] All tools callable with a valid token; no LLM inside servers.
-- [ ] Unauthenticated and revoked-token calls are rejected (verified).
-- [ ] Ruff clean; coverage ≥ 85% on server/tool modules.
+- [x] Two independent servers run locally on distinct configured ports.
+- [x] All tools callable with a valid token; no LLM inside servers.
+- [x] Unauthenticated and revoked-token calls are rejected (verified).
+- [x] Ruff clean; coverage ≥ 85% on server/tool modules.
 
 ---
 

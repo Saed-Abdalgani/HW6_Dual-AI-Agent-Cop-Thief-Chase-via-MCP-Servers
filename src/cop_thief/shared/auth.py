@@ -1,25 +1,12 @@
-"""Token-based authentication for MCP servers.
-
-Provides :class:`TokenStore` for issuing, verifying, and revoking bearer
-tokens.  Tokens are stored as **HMAC-SHA256 hashes** — the raw token is
-provided to the caller once and never retained.
-
-Token data types live in :mod:`._auth_types`.
-
-Traces: NFR-1, NFR-2, PLAN §16, T-P0-22.
-"""
 
 from __future__ import annotations
-
 import hashlib
 import hmac
 import os
 import secrets
 import threading
 from datetime import UTC, datetime
-
 from cop_thief.shared._auth_types import TokenRecord
-
 __all__ = ["TokenRecord", "TokenStore", "default_store"]
 
 
@@ -67,6 +54,45 @@ class TokenStore:
             self._records[token_id] = record
             self._hash_index[token_hash] = token_id
         return raw_token
+    def register_token(self, agent: str, raw_token: str) -> None:
+        """Register a pre-determined raw token for *agent*.
+
+        Args:
+            agent: Logical name of the agent (e.g. ``"cop"`` or ``"thief"``).
+            raw_token: The raw token string to register.
+
+        """
+        token_id = secrets.token_hex(8)
+        token_hash = self._hash(raw_token)
+        record = TokenRecord(
+            token_id=token_id,
+            token_hash=token_hash,
+            agent=agent,
+            issued_at=datetime.now(UTC),
+        )
+        with self._lock:
+            self._records[token_id] = record
+            self._hash_index[token_hash] = token_id
+
+    def get_agent(self, raw_token: str) -> str | None:
+        """Return the agent name associated with the raw token if valid.
+
+        Args:
+            raw_token: The bearer token to inspect.
+
+        Returns:
+            The associated agent name if the token is valid; ``None`` otherwise.
+
+        """
+        token_hash = self._hash(raw_token)
+        with self._lock:
+            token_id = self._hash_index.get(token_hash)
+            if token_id is None:
+                return None
+            record = self._records.get(token_id)
+            if record is None or record.revoked:
+                return None
+            return record.agent
 
     def verify(self, raw_token: str) -> bool:
         """Return ``True`` if *raw_token* is valid (issued and not revoked).
@@ -121,8 +147,4 @@ class TokenStore:
     def _hash(self, raw_token: str) -> str:
         """Return the HMAC-SHA256 hex digest of *raw_token*."""
         return hmac.new(self._secret, raw_token.encode(), hashlib.sha256).hexdigest()
-
-
-#: Default singleton store used by MCP servers.
-#: Tests should create their own :class:`TokenStore` instances.
 default_store: TokenStore = TokenStore()

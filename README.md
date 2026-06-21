@@ -15,6 +15,19 @@ uv sync --all-extras
 uv run cop-thief
 ```
 
+## Running MCP Servers Locally (Phase P2)
+
+You can run the independent Cop and Thief MCP servers on their distinct local ports (defined in the configuration file, default ports 8001 and 8002):
+
+```bash
+# Start the Cop MCP server
+uv run python -m cop_thief.mcp_servers.cop_server
+
+# Start the Thief MCP server
+uv run python -m cop_thief.mcp_servers.thief_server
+```
+
+
 ## Documentation
 
 See [`docs/`](docs/) for:
