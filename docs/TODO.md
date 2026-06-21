@@ -57,7 +57,7 @@ A task is **Done** only when ALL of the following hold:
 | Phase | Theme | Priority | Status | Exit criterion |
 |-------|-------|----------|--------|----------------|
 | P0 | Project scaffold + config + Gatekeeper | P0 | `[x]` | `uv sync` works; config validates; Ruff clean |
-| P1 | Core game engine | P1 | `[ ]` | Engine unit-tested, deterministic with seed |
+| P1 | Core game engine | P1 | `[x]` | Engine unit-tested, deterministic with seed |
 | P2 | Two MCP servers (cop, thief) | P1 | `[ ]` | Tools callable w/ token; unauth rejected |
 | P3 | Orchestrator + local E2E | P1 | `[ ]` | 6 sub-games run locally, 0 manual steps |
 | P4 | Decision strategy | P1 | `[ ]` | Strategy selectable; baseline completes games |
@@ -182,68 +182,68 @@ scoring, sub-game/full-game lifecycle) independent of MCP/LLM. This is the rules
 PLAN §6, `docs/PRD_game_engine.md`.
 
 ### Per-mechanism PRD
-- [ ] **T-P1-01 (P1)** — Write `docs/PRD_game_engine.md` (state, transitions, edge cases, invariants).
+- [x] **T-P1-01 (P1)** — Write `docs/PRD_game_engine.md` (state, transitions, edge cases, invariants).
   - DoD: Documents capture rule, barrier crossing, turn order, max-moves termination.
 
 ### Board (`services/engine/board.py`)
-- [ ] **T-P1-02 (P1)** — Implement `Board` from `grid_size` config (no hard-coded size).
+- [x] **T-P1-02 (P1)** — Implement `Board` from `grid_size` config (no hard-coded size).
   - DoD: Supports 5×5 default and arbitrary sizes; tested 5×5 and 7×7. _Traces:_ FR-B1/B2, AC-5.
-- [ ] **T-P1-03 (P1)** — Implement cell coordinates + in-bounds check.
+- [x] **T-P1-03 (P1)** — Implement cell coordinates + in-bounds check.
   - DoD: Out-of-bounds detection unit-tested. _Traces:_ FR-M3.
-- [ ] **T-P1-04 (P1)** — Implement barrier storage + `is_blocked(cell)`.
+- [x] **T-P1-04 (P1)** — Implement barrier storage + `is_blocked(cell)`.
   - DoD: Blocked cells tracked; tested. _Traces:_ FR-BR3.
-- [ ] **T-P1-05 (P1)** — Implement start-position generator (`random` | `strategy`) from config.
+- [x] **T-P1-05 (P1)** — Implement start-position generator (`random` | `strategy`) from config.
   - DoD: Start cells distinct, not on barrier; deterministic under `seed`. _Traces:_ FR-B3/B4, NFR-11.
 
 ### Movement & legality (`services/engine/rules.py`)
-- [ ] **T-P1-06 (P1)** — Implement 8-direction + `stay` move resolution.
+- [x] **T-P1-06 (P1)** — Implement 8-direction + `stay` move resolution.
   - DoD: All diagonal/orthogonal moves produce correct target cells. _Traces:_ FR-M1/M2.
-- [ ] **T-P1-07 (P1)** — Reject moves leaving the board.
+- [x] **T-P1-07 (P1)** — Reject moves leaving the board.
   - DoD: Illegal off-board move rejected; tested. _Traces:_ FR-M3.
-- [ ] **T-P1-08 (P1)** — Reject moving into/crossing a blocked square (both players).
+- [x] **T-P1-08 (P1)** — Reject moving into/crossing a blocked square (both players).
   - DoD: Barrier-crossing rejected; tested for cop and thief. _Traces:_ FR-M4, FR-BR3.
-- [ ] **T-P1-09 (P1)** — Enforce turn order (thief first by default, configurable).
+- [x] **T-P1-09 (P1)** — Enforce turn order (thief first by default, configurable).
   - DoD: Turn sequence correct; tested both orderings. _Traces:_ FR-M5, `thief_moves_first`.
 
 ### Barriers
-- [ ] **T-P1-10 (P1)** — Implement cop `place_barrier` (occupies current cell, no move that turn).
+- [x] **T-P1-10 (P1)** — Implement cop `place_barrier` (occupies current cell, no move that turn).
   - DoD: Position unchanged; cell becomes blocked; tested. _Traces:_ FR-BR1/BR2.
-- [ ] **T-P1-11 (P1)** — Enforce `max_barriers` (default 5) per sub-game.
+- [x] **T-P1-11 (P1)** — Enforce `max_barriers` (default 5) per sub-game.
   - DoD: 6th barrier rejected; counter resets per sub-game; tested. _Traces:_ FR-BR4, AC-4.
-- [ ] **T-P1-12 (P1)** — Forbid thief from placing barriers.
+- [x] **T-P1-12 (P1)** — Forbid thief from placing barriers.
   - DoD: Thief barrier attempt rejected; tested. _Traces:_ FR-BR5.
 
 ### Victory & scoring
-- [ ] **T-P1-13 (P1)** — Implement capture detection (cop cell == thief cell ⇒ cop wins).
+- [x] **T-P1-13 (P1)** — Implement capture detection (cop cell == thief cell ⇒ cop wins).
   - DoD: Capture ends sub-game with cop win; tested. _Traces:_ FR-V1.
-- [ ] **T-P1-14 (P1)** — Implement thief-escape detection (survive `max_moves` ⇒ thief wins).
+- [x] **T-P1-14 (P1)** — Implement thief-escape detection (survive `max_moves` ⇒ thief wins).
   - DoD: At move 25 with no capture, thief wins; tested. _Traces:_ FR-V2/V3, AC-4.
-- [ ] **T-P1-15 (P1)** — Implement scoring (`scoring.py`) from config table.
+- [x] **T-P1-15 (P1)** — Implement scoring (`scoring.py`) from config table.
   - DoD: Cop-win → 20/5; thief-win → 5/10; values from config; tested. _Traces:_ FR-S1, PLAN §10.4.
-- [ ] **T-P1-16 (P1)** — Implement totals accumulation across sub-games.
+- [x] **T-P1-16 (P1)** — Implement totals accumulation across sub-games.
   - DoD: Totals sum correctly; max 90 / min 30 bounds documented. _Traces:_ FR-S2/S3.
 
 ### Lifecycle (`services/engine/lifecycle.py`)
-- [ ] **T-P1-17 (P1)** — Implement single sub-game runner (≤ 25 moves, returns result).
+- [x] **T-P1-17 (P1)** — Implement single sub-game runner (≤ 25 moves, returns result).
   - DoD: Produces `SubGameResult` (winner, moves, barriers_used, scores). _Traces:_ FR-L1, PLAN §10.4.
-- [ ] **T-P1-18 (P1)** — Implement full-game runner: loop until **6 valid** sub-games.
+- [x] **T-P1-18 (P1)** — Implement full-game runner: loop until **6 valid** sub-games.
   - DoD: Exactly 6 valid results collected. _Traces:_ FR-L2, AC-3.
-- [ ] **T-P1-19 (P1)** — Implement technical-failure detection + **rerun** (invalid not counted).
+- [x] **T-P1-19 (P1)** — Implement technical-failure detection + **rerun** (invalid not counted).
   - DoD: Forced failure triggers rerun; invalid excluded; tested. _Traces:_ FR-L3, NFR-4.
 
 ### Phase P1 tests
-- [ ] **T-P1-20 (P1)** — Unit tests: board bounds, diagonal/orth moves, start generation.
-- [ ] **T-P1-21 (P1)** — Unit tests: barrier crossing, barrier limit, thief-barrier rejection.
-- [ ] **T-P1-22 (P1)** — Unit tests: capture, max-moves escape, turn order.
-- [ ] **T-P1-23 (P1)** — Unit tests: scoring table + totals (both outcomes).
-- [ ] **T-P1-24 (P1)** — Unit tests: lifecycle 6-valid loop + forced rerun on technical failure.
-- [ ] **T-P1-25 (P1)** — Determinism test: same `seed` ⇒ identical game trace. _Traces:_ NFR-11.
+- [x] **T-P1-20 (P1)** — Unit tests: board bounds, diagonal/orth moves, start generation.
+- [x] **T-P1-21 (P1)** — Unit tests: barrier crossing, barrier limit, thief-barrier rejection.
+- [x] **T-P1-22 (P1)** — Unit tests: capture, max-moves escape, turn order.
+- [x] **T-P1-23 (P1)** — Unit tests: scoring table + totals (both outcomes).
+- [x] **T-P1-24 (P1)** — Unit tests: lifecycle 6-valid loop + forced rerun on technical failure.
+- [x] **T-P1-25 (P1)** — Determinism test: same `seed` ⇒ identical game trace. _Traces:_ NFR-11.
 
 ### Phase P1 Definition of Done (exit criteria)
-- [ ] Engine fully implements PRD §7 rules; pure and deterministic with `seed`.
-- [ ] All engine unit tests pass; engine coverage ≥ 85%.
-- [ ] `docs/PRD_game_engine.md` complete and consistent with code.
-- [ ] Ruff clean; files ≤ ~150 LOC.
+- [x] Engine fully implements PRD §7 rules; pure and deterministic with `seed`.
+- [x] All engine unit tests pass; engine coverage ≥ 85%.
+- [x] `docs/PRD_game_engine.md` complete and consistent with code.
+- [x] Ruff clean; files ≤ ~150 LOC.
 
 ---
 

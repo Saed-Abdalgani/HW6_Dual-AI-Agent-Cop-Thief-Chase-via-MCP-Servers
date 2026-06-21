@@ -1,12 +1,14 @@
 """Token-based authentication for MCP servers.
 
-Provides :class:`TokenStore` for issuing, verifying, and revoking bearer tokens
-used by the cop and thief MCP servers.  Tokens are stored as **HMAC-SHA256
-hashes** — only the hash lives in memory; the raw token is provided to the
-caller once at issuance and is never retained.
+Provides :class:`TokenStore` for issuing, verifying, and revoking bearer
+tokens.  Tokens are stored as **HMAC-SHA256 hashes** — the raw token is
+provided to the caller once and never retained.
+
+Token data types live in :mod:`._auth_types`.
 
 Traces: NFR-1, NFR-2, PLAN §16, T-P0-22.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -14,22 +16,12 @@ import hmac
 import os
 import secrets
 import threading
-from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
+from cop_thief.shared._auth_types import TokenRecord
 
-# Data types
-@dataclass(frozen=True)
-class TokenRecord:
-    """Metadata stored for each issued token (never stores the raw token)."""
+__all__ = ["TokenRecord", "TokenStore", "default_store"]
 
-    token_id: str
-    token_hash: str           # HMAC-SHA256 of raw_token with internal secret
-    agent: str                # "cop" | "thief" | any label
-    issued_at: datetime
-    revoked: bool = False
-
-# Token store
 
 class TokenStore:
     """Thread-safe token registry: issue, verify, and revoke bearer tokens.
@@ -42,20 +34,16 @@ class TokenStore:
         store.revoke(raw_token)
         store.verify(raw_token)           # → False
 
-    The raw token is **never** stored.  Only its HMAC-SHA256 hash (keyed with
-    an in-process secret) is kept, so even a memory-dump attacker cannot
-    extract a usable token.
+    The raw token is **never** stored — only its HMAC-SHA256 hash is kept.
     """
 
     def __init__(self) -> None:
         """Initialize the token store with a fresh in-process HMAC secret."""
-        self._secret: bytes = os.urandom(32)   # process-lifetime HMAC key
-        self._records: dict[str, TokenRecord] = {}  # token_id → record
-        self._hash_index: dict[str, str] = {}       # token_hash → token_id
+        self._secret: bytes = os.urandom(32)
+        self._records: dict[str, TokenRecord] = {}
+        self._hash_index: dict[str, str] = {}
         self._lock = threading.Lock()
 
-
-    # Public API
     def issue(self, agent: str) -> str:
         """Generate and register a new bearer token for *agent*.
 
@@ -63,8 +51,7 @@ class TokenStore:
             agent: Logical name of the agent (e.g. ``"cop"`` or ``"thief"``).
 
         Returns:
-            The raw token string.  **Return this to the caller exactly once.**
-            It is not retrievable afterward.
+            The raw token string. **Return this to the caller exactly once.**
 
         """
         raw_token = secrets.token_urlsafe(32)
@@ -106,8 +93,7 @@ class TokenStore:
             raw_token: The bearer token to revoke.
 
         Returns:
-            ``True`` if the token was found and revoked; ``False`` if it was
-            already revoked or unknown.
+            ``True`` if found and revoked; ``False`` if unknown or already revoked.
 
         """
         token_hash = self._hash(raw_token)
@@ -132,20 +118,11 @@ class TokenStore:
         with self._lock:
             return sum(1 for r in self._records.values() if not r.revoked)
 
-    # Internals
-
     def _hash(self, raw_token: str) -> str:
-        """Return the HMAC-SHA256 hex digest of *raw_token* keyed with the internal secret."""
+        """Return the HMAC-SHA256 hex digest of *raw_token*."""
         return hmac.new(self._secret, raw_token.encode(), hashlib.sha256).hexdigest()
 
-# Module-level default store
 
-#: Default singleton store used by the MCP servers.  Tests should create their
-#: own :class:`TokenStore` instances to avoid shared state.
+#: Default singleton store used by MCP servers.
+#: Tests should create their own :class:`TokenStore` instances.
 default_store: TokenStore = TokenStore()
-
-@dataclass
-class _Unused:
-    """Placeholder to satisfy unused-import linting for ``field``."""
-
-    _: list[str] = field(default_factory=list)

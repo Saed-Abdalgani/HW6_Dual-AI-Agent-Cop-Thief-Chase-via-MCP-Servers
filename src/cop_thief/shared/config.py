@@ -5,7 +5,8 @@ validates all keys/ranges using Pydantic, and exposes a single typed
 :class:`Config` object.  Secrets are **always** sourced from environment
 variables — never from the config file itself.
 
-Sub-model schemas live in :mod:`cop_thief.shared._config_schemas`.
+File loading and secret helpers live in :mod:`._config_loader`.
+Sub-model schemas live in :mod:`._config_schemas`.
 
 Traces: FR-C1, FR-C2, FR-C3, T-P0-08, T-P0-09, T-P0-10, T-P0-11.
 """
@@ -13,12 +14,11 @@ Traces: FR-C1, FR-C2, FR-C3, T-P0-08, T-P0-09, T-P0-10, T-P0-11.
 from __future__ import annotations
 
 import os
-from pathlib import Path
 
-import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from cop_thief.constants import StartMode, Strategy
+from cop_thief.shared._config_loader import load_secret, load_yaml
 from cop_thief.shared._config_schemas import (
     EmailConfig,
     GatekeeperConfig,
@@ -27,7 +27,6 @@ from cop_thief.shared._config_schemas import (
     ScoringConfig,
 )
 
-# Re-export sub-schemas so existing imports keep working.
 __all__ = [
     "Config",
     "EmailConfig",
@@ -42,7 +41,6 @@ class Config(BaseModel):
     """Typed, validated runtime configuration.
 
     All tunables come from ``config/config.yaml``; secrets come from env vars.
-    Provides class-method loaders for convenience.
     """
 
     # Board
@@ -72,10 +70,6 @@ class Config(BaseModel):
     timezone: str = "UTC"
     seed: int | None = None
 
-    # ------------------------------------------------------------------
-    # Validators
-    # ------------------------------------------------------------------
-
     @field_validator("grid_size", mode="before")
     @classmethod
     def _validate_grid_size(cls, v: object) -> tuple[int, int]:
@@ -100,31 +94,16 @@ class Config(BaseModel):
             raise ValueError(msg)
         return self
 
-    # ------------------------------------------------------------------
-    # Secrets (T-P0-11) — loaded from env vars, not config
-    # ------------------------------------------------------------------
-
     @classmethod
     def load_secret(cls, env_var: str, *, required: bool = True) -> str | None:
-        """Return the value of an env var; raise :class:`OSError` if missing and required.
+        """Return the value of an env var; raise if missing and required.
 
         Secrets are never logged.
         """
-        value = os.environ.get(env_var)
-        if required and not value:
-            msg = (
-                f"Required secret '{env_var}' is not set. "
-                f"See .env-example for the full list of required env vars."
-            )
-            raise OSError(msg)
-        return value
-
-    # ------------------------------------------------------------------
-    # Factory loaders
-    # ------------------------------------------------------------------
+        return load_secret(env_var, required=required)
 
     @classmethod
-    def from_yaml(cls, path: str | Path) -> Config:
+    def from_yaml(cls, path: str) -> Config:
         """Load and validate config from a YAML file.
 
         Args:
@@ -133,18 +112,8 @@ class Config(BaseModel):
         Returns:
             A fully validated :class:`Config` instance.
 
-        Raises:
-            FileNotFoundError: If *path* does not exist.
-            ValueError: If the YAML content fails validation.
-
         """
-        path = Path(path)
-        if not path.exists():
-            msg = f"Config file not found: {path}"
-            raise FileNotFoundError(msg)
-        with path.open(encoding="utf-8") as fh:
-            raw = yaml.safe_load(fh) or {}
-        return cls.model_validate(raw)
+        return cls.model_validate(load_yaml(path))
 
     @classmethod
     def from_env(cls) -> Config:
