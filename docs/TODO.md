@@ -60,7 +60,7 @@ A task is **Done** only when ALL of the following hold:
 | P1 | Core game engine | P1 | `[x]` | Engine unit-tested, deterministic with seed |
 | P2 | Two MCP servers (cop, thief) | P1 | `[ ]` | Tools callable w/ token; unauth rejected |
 | P3 | Orchestrator + local E2E | P1 | `[x]` | 6 sub-games run locally, 0 manual steps |
-| P4 | Decision strategy | P1 | `[ ]` | Strategy selectable; baseline completes games |
+| P4 | Decision strategy | P1 | `[x]` | Strategy selectable; baseline completes games |
 | P5 | Natural-language messaging | P1 | `[ ]` | Free-text turns; ambiguity handled |
 | P6 | GUI | P2 | `[ ]` | Visual run matches engine state |
 | P7 | Cloud deploy + auth | P1 | `[ ]` | Public URLs live; revoke verified |
@@ -369,20 +369,20 @@ invokes MCP tools, validates actions, and runs **6 valid sub-games locally with 
 **Goal:** Provide selectable decision strategies — a mandatory heuristic baseline, optional tabular
 Q-learning, and an LLM strategy — chosen via config and feeding off the opponent estimate.
 
-**Priority:** P1 · **Status:** `[ ]` · **Traces:** PRD §8.5 (FR-D1..3), PLAN §14, `docs/PRD_qlearning.md`.
+**Priority:** P1 · **Status:** `[x]` · **Traces:** PRD §8.5 (FR-D1..3), PLAN §14, `docs/PRD_qlearning.md`.
 
 ### Strategy interface (`services/strategy/base.py`)
-- [ ] **T-P4-01 (P1)** — Define `Strategy` interface: `choose(observation) -> action`.
+- [x] **T-P4-01 (P1)** — Define `Strategy` interface: `choose(observation) -> action`.
   - DoD: All strategies implement it; selectable by `strategy` config. _Traces:_ FR-D3, ADR-5.
-- [ ] **T-P4-02 (P1)** — Implement strategy factory keyed by config (`heuristic|qlearning|llm`).
+- [x] **T-P4-02 (P1)** — Implement strategy factory keyed by config (`heuristic|qlearning|llm`).
   - DoD: Unknown value ⇒ clear error; default `heuristic`. _Traces:_ FR-D3.
 
 ### Heuristic baseline (`services/strategy/heuristic.py`)
-- [ ] **T-P4-03 (P1)** — Implement Manhattan-distance policy: cop minimizes, thief maximizes distance.
+- [x] **T-P4-03 (P1)** — Implement Manhattan-distance policy: cop minimizes, thief maximizes distance.
   - DoD: Cop closes in; thief flees; respects legality. _Traces:_ FR-D1, PLAN §14.
-- [ ] **T-P4-04 (P1)** — Implement cop barrier heuristic (place when adjacent & budget remains).
+- [x] **T-P4-04 (P1)** — Implement cop barrier heuristic (place when adjacent & budget remains).
   - DoD: Uses ≤ 5 barriers sensibly; tested. _Traces:_ FR-BR4.
-- [ ] **T-P4-05 (P1)** — Integrate opponent estimate (from `estimator.py`) into distance calc.
+- [x] **T-P4-05 (P1)** — Integrate opponent estimate (from `estimator.py`) into distance calc.
   - DoD: Uses belief, not ground-truth opponent coords. _Traces:_ FR-NL2, partial observability.
 
 ### Optional Q-learning (`services/strategy/qlearning.py`)
@@ -396,20 +396,20 @@ Q-learning, and an LLM strategy — chosen via config and feeding off the oppone
   - DoD: Curve generated; referenced in README §evidence. _Traces:_ README §3.
 
 ### LLM strategy (`services/strategy/llm_strategy.py`)
-- [ ] **T-P4-11 (P2)** — Implement prompt-based strategy returning `{action, nl_message}`.
+- [x] **T-P4-11 (P2)** — Implement prompt-based strategy returning `{action, nl_message}`.
   - DoD: Uses `LlmClient`; validates action legality. _Traces:_ ADR-6, PLAN §13.
 
 ### Phase P4 tests
-- [ ] **T-P4-12 (P1)** — Unit: heuristic cop reduces distance; thief increases it (mock state).
-- [ ] **T-P4-13 (P1)** — Unit: barrier heuristic respects limit and legality.
-- [ ] **T-P4-14 (P1)** — Unit: strategy factory selects correct class from config.
+- [x] **T-P4-12 (P1)** — Unit: heuristic cop reduces distance; thief increases it (mock state).
+- [x] **T-P4-13 (P1)** — Unit: barrier heuristic respects limit and legality.
+- [x] **T-P4-14 (P1)** — Unit: strategy factory selects correct class from config.
 - [ ] **T-P4-15 (P3)** — Unit: Q-learning Bellman update produces expected values.
 
 ### Phase P4 Definition of Done (exit criteria)
-- [ ] Heuristic baseline plays full games to completion via the orchestrator.
-- [ ] Strategy is selectable purely via config (no code change).
-- [ ] Strategies consume the opponent **estimate**, not ground truth.
-- [ ] Ruff clean; coverage ≥ 85% (optional Q-learning excluded if not implemented).
+- [x] Heuristic baseline plays full games to completion via the orchestrator.
+- [x] Strategy is selectable purely via config (no code change).
+- [x] Strategies consume the opponent **estimate**, not ground truth.
+- [x] Ruff clean; coverage ≥ 85% (optional Q-learning excluded if not implemented).
 
 ---
 

@@ -1,18 +1,25 @@
 """Manhattan-distance heuristic baseline strategy.
 
-Used as config-selectable strategy (P4) and LLM fallback (P3).
+Uses opponent *estimate* (not ground truth) for distance calculations.
 
-Traces: FR-D1, PLAN §14, T-P3-05, T-P4-03.
+Traces: FR-D1, FR-NL2, PLAN §14, T-P3-05, T-P4-03..05.
 """
 
 from __future__ import annotations
 
 from cop_thief.constants import COP_ACTIONS, MOVE_DELTAS, THIEF_ACTIONS, Action, Agent
 from cop_thief.services.orchestrator._types import Observation
+from cop_thief.services.strategy.base import Strategy, StrategyDecision
 
 
 def _manhattan(a: tuple[int, int], b: tuple[int, int]) -> int:
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+
+def _target(obs: Observation, action: Action) -> tuple[int, int]:
+    dr, dc = MOVE_DELTAS[action]
+    r, c = obs.own_pos
+    return (r + dr, c + dc)
 
 
 def _legal_moves(obs: Observation) -> list[Action]:
@@ -32,13 +39,12 @@ def _legal_moves(obs: Observation) -> list[Action]:
 
 
 def choose_heuristic_action(obs: Observation) -> Action:
-    """Pick an action using Manhattan distance to the opponent estimate."""
+    """Pick an action using Manhattan distance to ``obs.opp_estimate``."""
     legal = _legal_moves(obs)
     opp = obs.opp_estimate
 
     if (
         obs.agent is Agent.COP
-        and Action.PLACE_BARRIER in COP_ACTIONS
         and obs.barriers_used < obs.max_barriers
         and _manhattan(obs.own_pos, opp) <= 1
     ):
@@ -49,7 +55,15 @@ def choose_heuristic_action(obs: Observation) -> Action:
     return max(legal, key=lambda a: _manhattan(_target(obs, a), opp))
 
 
-def _target(obs: Observation, action: Action) -> tuple[int, int]:
-    dr, dc = MOVE_DELTAS[action]
-    r, c = obs.own_pos
-    return (r + dr, c + dc)
+class HeuristicStrategy(Strategy):
+    """Config-selectable heuristic strategy."""
+
+    async def decide(self, obs: Observation) -> StrategyDecision:
+        """Return Manhattan-based action and a short NL taunt."""
+        action = choose_heuristic_action(obs)
+        msg = "Closing in." if obs.agent is Agent.COP else "Slipping away."
+        return StrategyDecision(action=action, nl_message=msg)
+
+    def choose(self, obs: Observation) -> Action:
+        """Return an action synchronously for fallback paths."""
+        return choose_heuristic_action(obs)

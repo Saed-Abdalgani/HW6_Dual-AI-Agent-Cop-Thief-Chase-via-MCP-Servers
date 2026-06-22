@@ -1,23 +1,24 @@
-"""Per-turn orchestration: LLM decision → MCP message → apply action.
+"""Per-turn orchestration: strategy decision → MCP message → apply action.
 
-Traces: FR-O3, PLAN §11, T-P3-06, T-P3-07.
+Traces: FR-O3, PLAN §11, T-P3-06, T-P4-01.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-from cop_thief.constants import Action, Agent, Strategy
-from cop_thief.services.orchestrator._types import LlmDecision, Observation
+from cop_thief.constants import Action, Agent
+from cop_thief.services.orchestrator._types import Observation
 from cop_thief.services.orchestrator.estimator import OpponentEstimator
-from cop_thief.services.orchestrator.llm_client import LlmClient
 from cop_thief.services.orchestrator.mcp_client import McpClient
 from cop_thief.services.orchestrator.validator import ActionValidator
-from cop_thief.services.strategy.heuristic import choose_heuristic_action
+from cop_thief.services.strategy.base import Strategy
+from cop_thief.services.strategy.heuristic import HeuristicStrategy, choose_heuristic_action
 from cop_thief.shared.config import Config
 from cop_thief.shared.logging import get_logger
 
 _log = get_logger(__name__)
+_FALLBACK = HeuristicStrategy()
 
 
 @dataclass
@@ -31,20 +32,20 @@ class TurnResult:
 
 
 class TurnController:
-    """Execute one turn: context → LLM → validate → MCP send → apply."""
+    """Execute one turn: context → strategy → validate → MCP send → apply."""
 
     def __init__(
         self,
         config: Config,
         mcp: McpClient,
-        llm: LlmClient,
+        strategy: Strategy,
         estimator: OpponentEstimator,
         validator: ActionValidator | None = None,
     ) -> None:
         """Wire dependencies for turn execution."""
         self._cfg = config
         self._mcp = mcp
-        self._llm = llm
+        self._strategy = strategy
         self._estimator = estimator
         self._validator = validator or ActionValidator()
 
@@ -64,24 +65,14 @@ class TurnController:
             last_message=last_msg,
         )
 
-    async def _decide(self, obs: Observation) -> LlmDecision:
-        if self._cfg.strategy is Strategy.HEURISTIC:
-            action = choose_heuristic_action(obs)
-            msg = "Closing in." if obs.agent is Agent.COP else "Slipping away."
-            return LlmDecision(action=action, nl_message=msg)
-        return await self._llm.decide(obs)
-
     async def execute_turn(self, agent: Agent, move_count: int) -> TurnResult:
         """Run the full per-turn pipeline for *agent*."""
         obs = await self._load_context(agent, move_count)
-        decision = await self._decide(obs)
+        decision = await self._strategy.decide(obs)
         action = decision.action
         if not self._validator.is_legal(obs, action):
-            _log.warning(
-                "Action %s rejected for %s; heuristic fallback.",
-                action, agent,
-            )
-            action = choose_heuristic_action(obs)
+            _log.warning("Action %s rejected for %s; heuristic fallback.", action, agent)
+            action = _FALLBACK.choose(obs)
         await self._mcp.send_message(agent.value, decision.nl_message)
         apply_resp = await self._mcp.apply_action(agent.value, action.value)
         legal = bool(apply_resp.get("legal", False))

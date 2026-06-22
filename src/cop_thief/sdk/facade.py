@@ -19,6 +19,7 @@ from cop_thief.services.orchestrator.llm_client import LlmClient
 from cop_thief.services.orchestrator.mcp_client import McpClient
 from cop_thief.services.orchestrator.turn_controller import TurnController
 from cop_thief.services.orchestrator.validator import ActionValidator
+from cop_thief.services.strategy.factory import create_strategy
 from cop_thief.shared.auth import default_store
 from cop_thief.shared.config import Config
 from cop_thief.shared.gatekeeper import Gatekeeper
@@ -60,8 +61,9 @@ class CopThiefSDK:
         self._mcp = McpClient(config, self._gk, cop_tok, thief_tok, backend=backend)
         self._llm = LlmClient(config, self._gk, llm_caller=llm_caller)  # type: ignore[arg-type]
         self._estimator = OpponentEstimator(config.grid_size)
+        self._strategy = create_strategy(config, self._llm)
         self._turn = TurnController(
-            config, self._mcp, self._llm, self._estimator, ActionValidator(),
+            config, self._mcp, self._strategy, self._estimator, ActionValidator(),
         )
         self._loop = GameLoop(
             config, self._mcp, self._turn, random.Random(config.seed),
