@@ -1,7 +1,11 @@
 """Shared tool layer for Cop and Thief MCP servers.
-Exposes standard actions, verifies token auth/turn ownership, and validates inputs."""
+
+Exposes standard actions, verifies token auth/turn ownership, and validates inputs.
+"""
 from __future__ import annotations
+
 import uuid
+
 from cop_thief.constants import MOVE_DELTAS, Action, Agent, Outcome
 from cop_thief.mcp_servers._state import (
     get_engine_objects,
@@ -12,6 +16,7 @@ from cop_thief.mcp_servers._state import (
 from cop_thief.services.engine.scoring import calculate_score
 from cop_thief.shared.auth import default_store
 from cop_thief.shared.config import Config
+
 
 def authorize(token: str, expected_agent: str | None = None) -> str:
     """Validate token and optional agent ownership."""

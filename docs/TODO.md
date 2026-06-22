@@ -59,7 +59,7 @@ A task is **Done** only when ALL of the following hold:
 | P0 | Project scaffold + config + Gatekeeper | P0 | `[x]` | `uv sync` works; config validates; Ruff clean |
 | P1 | Core game engine | P1 | `[x]` | Engine unit-tested, deterministic with seed |
 | P2 | Two MCP servers (cop, thief) | P1 | `[ ]` | Tools callable w/ token; unauth rejected |
-| P3 | Orchestrator + local E2E | P1 | `[ ]` | 6 sub-games run locally, 0 manual steps |
+| P3 | Orchestrator + local E2E | P1 | `[x]` | 6 sub-games run locally, 0 manual steps |
 | P4 | Decision strategy | P1 | `[ ]` | Strategy selectable; baseline completes games |
 | P5 | Natural-language messaging | P1 | `[ ]` | Free-text turns; ambiguity handled |
 | P6 | GUI | P2 | `[ ]` | Visual run matches engine state |
@@ -308,59 +308,59 @@ token authentication and input validation, runnable locally on distinct ports.
 **Goal:** Build the MCP-client orchestrator that drives the turn loop, calls the (mockable) LLM,
 invokes MCP tools, validates actions, and runs **6 valid sub-games locally with zero manual steps**.
 
-**Priority:** P1 · **Status:** `[ ]` · **Traces:** PRD §8.2 (FR-O1..4), PLAN §4, §11, §12, NFR-4.
+**Priority:** P1 · **Status:** `[x]` · **Traces:** PRD §8.2 (FR-O1..4), PLAN §4, §11, §12, NFR-4.
 
 ### MCP client (`orchestrator/mcp_client.py`)
-- [ ] **T-P3-01 (P1)** — Implement `McpClient` wrapping cop & thief tool calls via Gatekeeper + token.
+- [x] **T-P3-01 (P1)** — Implement `McpClient` wrapping cop & thief tool calls via Gatekeeper + token.
   - DoD: All MCP calls go through Gatekeeper; tokens injected from env. _Traces:_ FR-O2, NFR-5.
-- [ ] **T-P3-02 (P1)** — Implement health check (both servers reachable) for SDK `health_check()`.
+- [x] **T-P3-02 (P1)** — Implement health check (both servers reachable) for SDK `health_check()`.
   - DoD: Returns reachability status; tested with mocks. _Traces:_ PLAN §7.
 
 ### LLM client (`orchestrator/llm_client.py`)
-- [ ] **T-P3-03 (P1)** — Implement provider-agnostic `LlmClient` via Gatekeeper (provider/model/timeout from config).
+- [x] **T-P3-03 (P1)** — Implement provider-agnostic `LlmClient` via Gatekeeper (provider/model/timeout from config).
   - DoD: Pluggable provider; key from env; mockable in tests. _Traces:_ FR-LLM1/2/4, PLAN §13.
-- [ ] **T-P3-04 (P1)** — Define LLM output contract `{action, nl_message}` + JSON parse.
+- [x] **T-P3-04 (P1)** — Define LLM output contract `{action, nl_message}` + JSON parse.
   - DoD: Valid JSON parsed; malformed handled. _Traces:_ ADR-6, PLAN §13.
-- [ ] **T-P3-05 (P1)** — Implement fallback to heuristic strategy on parse/legality failure.
+- [x] **T-P3-05 (P1)** — Implement fallback to heuristic strategy on parse/legality failure.
   - DoD: Vague/invalid LLM output never stalls a turn; tested. _Traces:_ Risk mitigation, FR-NL3.
 
 ### Turn controller (`orchestrator/turn_controller.py`)
-- [ ] **T-P3-06 (P1)** — Implement per-turn flow: context → LLM decision → MCP send → apply_action.
+- [x] **T-P3-06 (P1)** — Implement per-turn flow: context → LLM decision → MCP send → apply_action.
   - DoD: Matches PLAN §11 sequence; tested with mocks. _Traces:_ FR-O3.
-- [ ] **T-P3-07 (P1)** — Enforce turn order (thief first) and alternate correctly.
+- [x] **T-P3-07 (P1)** — Enforce turn order (thief first) and alternate correctly.
   - DoD: Order verified across a multi-turn sub-game. _Traces:_ FR-M5.
-- [ ] **T-P3-08 (P1)** — Implement `ActionValidator` (reject illegal moves/barriers before apply).
+- [x] **T-P3-08 (P1)** — Implement `ActionValidator` (reject illegal moves/barriers before apply).
   - DoD: Illegal action requests blocked client-side; tested. _Traces:_ PLAN §4, FR-MCP4.
 
 ### Game loop & results (`orchestrator/game_loop.py`)
-- [ ] **T-P3-09 (P1)** — Implement sub-game driver using engine + MCP + LLM.
+- [x] **T-P3-09 (P1)** — Implement sub-game driver using engine + MCP + LLM.
   - DoD: Completes a sub-game ≤ 25 moves end-to-end (mocked LLM). _Traces:_ FR-L1.
-- [ ] **T-P3-10 (P1)** — Implement full-game driver: loop to **6 valid** sub-games, auto-rerun failures.
+- [x] **T-P3-10 (P1)** — Implement full-game driver: loop to **6 valid** sub-games, auto-rerun failures.
   - DoD: 6 valid sub-games, 0 manual steps; forced failure rerun tested. _Traces:_ FR-L2/L3, AC-2/3.
-- [ ] **T-P3-11 (P1)** — Implement `ResultCollector` accumulating per-sub-game results + totals.
+- [x] **T-P3-11 (P1)** — Implement `ResultCollector` accumulating per-sub-game results + totals.
   - DoD: Totals match scoring; structure matches PLAN §10.4. _Traces:_ FR-S2.
 
 ### Opponent estimator (`orchestrator/estimator.py`)
-- [ ] **T-P3-12 (P2)** — Implement belief/estimate of opponent position from history (pre-NL stub).
+- [x] **T-P3-12 (P2)** — Implement belief/estimate of opponent position from history (pre-NL stub).
   - DoD: Provides estimate to strategy; refined in P5. _Traces:_ FR-NL2, PLAN §14.
 
 ### SDK & CLI wiring
-- [ ] **T-P3-13 (P1)** — Implement `sdk/facade.py` (`run_sub_game`, `run_full_game`, `get_state`, `health_check`).
+- [x] **T-P3-13 (P1)** — Implement `sdk/facade.py` (`run_sub_game`, `run_full_game`, `get_state`, `health_check`).
   - DoD: Single public entry; GUI/CLI use only this. _Traces:_ NFR-7, PLAN §7.
-- [ ] **T-P3-14 (P1)** — Implement `cli/main.py` single-command autonomous run via SDK.
+- [x] **T-P3-14 (P1)** — Implement `cli/main.py` single-command autonomous run via SDK.
   - DoD: One command runs full game to completion. _Traces:_ AC-2.
 
 ### Phase P3 tests
-- [ ] **T-P3-15 (P1)** — Integration: full 6-valid-sub-game loop with mocked MCP + mocked LLM.
-- [ ] **T-P3-16 (P1)** — Integration: forced technical-failure → rerun → still 6 valid. _Traces:_ FR-L3.
-- [ ] **T-P3-17 (P1)** — Unit: LLM JSON parse + heuristic fallback path.
-- [ ] **T-P3-18 (P1)** — Unit: ActionValidator rejects illegal moves/barriers.
+- [x] **T-P3-15 (P1)** — Integration: full 6-valid-sub-game loop with mocked MCP + mocked LLM.
+- [x] **T-P3-16 (P1)** — Integration: forced technical-failure → rerun → still 6 valid. _Traces:_ FR-L3.
+- [x] **T-P3-17 (P1)** — Unit: LLM JSON parse + heuristic fallback path.
+- [x] **T-P3-18 (P1)** — Unit: ActionValidator rejects illegal moves/barriers.
 
 ### Phase P3 Definition of Done (exit criteria)
-- [ ] One command runs a full autonomous game locally (0 manual steps).
-- [ ] Exactly 6 valid sub-games; technical failures auto-rerun and excluded.
-- [ ] All external calls (LLM, MCP) routed through Gatekeeper.
-- [ ] Ruff clean; coverage ≥ 85%.
+- [x] One command runs a full autonomous game locally (0 manual steps).
+- [x] Exactly 6 valid sub-games; technical failures auto-rerun and excluded.
+- [x] All external calls (LLM, MCP) routed through Gatekeeper.
+- [x] Ruff clean; coverage ≥ 85%.
 
 ---
 

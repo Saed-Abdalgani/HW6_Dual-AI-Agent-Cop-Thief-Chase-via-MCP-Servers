@@ -1,12 +1,15 @@
 
 from __future__ import annotations
+
 import hashlib
 import hmac
 import os
 import secrets
 import threading
 from datetime import UTC, datetime
+
 from cop_thief.shared._auth_types import TokenRecord
+
 __all__ = ["TokenRecord", "TokenStore", "default_store"]
 
 

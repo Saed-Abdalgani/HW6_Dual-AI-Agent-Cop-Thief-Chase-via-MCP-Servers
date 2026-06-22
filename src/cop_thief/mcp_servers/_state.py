@@ -19,24 +19,27 @@ STATE_PATH = Path("data/mcp_state.json")
 
 
 def load_state() -> dict:
-    """Load JSON game state, initializing if absent."""
-    if not STATE_PATH.exists():
-        config = Config.from_env()
-        state = {
-            "cop_pos": [0, 0],
-            "thief_pos": [config.grid_size[0] - 1, config.grid_size[1] - 1],
-            "barriers": [],
-            "barriers_used": 0,
-            "messages": [],
-            "round_number": 0,
-            "awaiting_second": False,
-            "over": False,
-            "winner": "in_progress",
-        }
-        save_state(state)
-        return state
-    with open(STATE_PATH) as f:
-        return json.load(f)
+    """Load JSON game state, initializing if absent or corrupt."""
+    if STATE_PATH.exists():
+        try:
+            with open(STATE_PATH) as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            STATE_PATH.unlink(missing_ok=True)
+    config = Config.from_env()
+    state = {
+        "cop_pos": [0, 0],
+        "thief_pos": [config.grid_size[0] - 1, config.grid_size[1] - 1],
+        "barriers": [],
+        "barriers_used": 0,
+        "messages": [],
+        "round_number": 0,
+        "awaiting_second": False,
+        "over": False,
+        "winner": "in_progress",
+    }
+    save_state(state)
+    return state
 
 
 def save_state(state: dict) -> None:
