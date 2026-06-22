@@ -8,6 +8,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from cop_thief.constants import Action, Agent
+from cop_thief.services.nlp.encoder import encode_message
+from cop_thief.services.nlp.transcript import TranscriptLogger
 from cop_thief.services.orchestrator._types import Observation
 from cop_thief.services.orchestrator.estimator import OpponentEstimator
 from cop_thief.services.orchestrator.mcp_client import McpClient
@@ -41,6 +43,7 @@ class TurnController:
         strategy: Strategy,
         estimator: OpponentEstimator,
         validator: ActionValidator | None = None,
+        transcript: TranscriptLogger | None = None,
     ) -> None:
         """Wire dependencies for turn execution."""
         self._cfg = config
@@ -48,13 +51,19 @@ class TurnController:
         self._strategy = strategy
         self._estimator = estimator
         self._validator = validator or ActionValidator()
+        self._transcript = transcript
+
+    def start_transcript(self, sub_game_index: int) -> None:
+        """Start a fresh NL transcript for a sub-game."""
+        if self._transcript:
+            self._transcript.start(sub_game_index)
 
     async def _load_context(self, agent: Agent, move_count: int) -> Observation:
         pos_resp = await self._mcp.verify_position(agent.value)
         own_pos = tuple(pos_resp["pos"])
         msg_resp = await self._mcp.receive_message(agent.value)
         last_msg = msg_resp.get("text", "")
-        self._estimator.update_from_message(last_msg)
+        self._estimator.update_from_message(last_msg, agent)
         return self._estimator.build_observation(
             agent=agent,
             own_pos=own_pos,
@@ -73,7 +82,13 @@ class TurnController:
         if not self._validator.is_legal(obs, action):
             _log.warning("Action %s rejected for %s; heuristic fallback.", action, agent)
             action = _FALLBACK.choose(obs)
-        await self._mcp.send_message(agent.value, decision.nl_message)
+        nl_message = encode_message(
+            obs,
+            action,
+            decision.nl_message,
+            tone=self._cfg.nlp.tone,
+        )
+        await self._mcp.send_message(agent.value, nl_message)
         apply_resp = await self._mcp.apply_action(agent.value, action.value)
         legal = bool(apply_resp.get("legal", False))
         if not legal:
@@ -81,4 +96,9 @@ class TurnController:
             apply_resp = await self._mcp.apply_action(agent.value, fallback.value)
             action = fallback
             legal = bool(apply_resp.get("legal", False))
-        return TurnResult(agent=agent, action=action, legal=legal, nl_message=decision.nl_message)
+        if legal:
+            new_pos = apply_resp.get("state_delta", {}).get("new_pos")
+            self._estimator.update_from_action(agent, action, tuple(new_pos) if new_pos else None)
+        if self._transcript:
+            self._transcript.record(agent, action, nl_message, move_count)
+        return TurnResult(agent=agent, action=action, legal=legal, nl_message=nl_message)

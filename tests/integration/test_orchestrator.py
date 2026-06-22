@@ -18,7 +18,7 @@ from cop_thief.shared.auth import default_store
 def fast_config(tmp_path: Path, minimal_env: None, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Config with max_moves=2 for fast sub-games."""
     cfg = textwrap.dedent(
-        """\
+        f"""\
         grid_size: [5, 5]
         max_moves: 2
         num_games: 6
@@ -46,6 +46,9 @@ def fast_config(tmp_path: Path, minimal_env: None, monkeypatch: pytest.MonkeyPat
           timeout_s: 30
         email:
           to: "test@example.com"
+        nlp:
+          tone: balanced
+          transcript_dir: "{(tmp_path / 'results').as_posix()}"
         timezone: "UTC"
         seed: 42
         """
@@ -97,3 +100,17 @@ def test_technical_failure_rerun(fast_config: Path, monkeypatch: pytest.MonkeyPa
     report = sdk.run_full_game()
     assert report.sub_games_played == 6
     assert calls["n"] > 6
+
+
+def test_sub_game_uses_nl_transcript_via_mcp(fast_config: Path) -> None:
+    """A local MCP-backed sub-game exchanges free-text and writes transcript evidence."""
+    from cop_thief.shared.config import Config
+
+    config = Config.from_env()
+    sdk = CopThiefSDK(config, use_direct_mcp=True, llm_caller=_mock_llm)
+    result = sdk.run_sub_game()
+    transcript = Path(config.nlp.transcript_dir) / "nl_transcript_subgame_1.jsonl"
+    lines = transcript.read_text(encoding="utf-8").strip().splitlines()
+    assert result.moves_used > 0
+    assert lines
+    assert all("(2," not in line and "[2," not in line for line in lines)

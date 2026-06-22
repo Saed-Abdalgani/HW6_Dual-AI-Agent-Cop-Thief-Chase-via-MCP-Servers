@@ -48,6 +48,11 @@ gatekeeper:
 email:
   to: "rmisegal+uoh26b@gmail.com"   # Destination address for JSON report (FR-E5)
 
+# ── Natural-language protocol ────────────────────────────────────────────────
+nlp:
+  tone: balanced       # "balanced" | "deceptive" | "probing"
+  transcript_dir: results
+
 # ── Misc ─────────────────────────────────────────────────────────────────────
 timezone: "Asia/Jerusalem"  # Timezone for timestamps in the report
 seed: null                  # RNG seed for deterministic runs (null = random)

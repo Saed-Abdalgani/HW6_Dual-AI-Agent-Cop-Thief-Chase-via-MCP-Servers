@@ -42,6 +42,8 @@ class LlmClient:
             f"You are the {obs.agent.value} in a {obs.grid_size[0]}x{obs.grid_size[1]} chase game. "
             f"Your position: {obs.own_pos}. Opponent estimate: {obs.opp_estimate}. "
             f"Moves so far: {obs.move_count}. Last message: {obs.last_message!r}. "
+            "Your nl_message must be natural language with coarse hints only; "
+            "do not include literal row/column coordinates. "
             f"Reply with JSON only matching: {schema}"
         )
 

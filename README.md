@@ -27,6 +27,11 @@ uv run python -m cop_thief.mcp_servers.cop_server
 uv run python -m cop_thief.mcp_servers.thief_server
 ```
 
+## Natural-Language Transcripts (Phase P5)
+
+Every orchestrated turn sends a coordinate-free free-text message through MCP. Sub-game transcripts
+are written as JSON Lines files under `results/nl_transcript_subgame_<n>.jsonl`.
+
 
 ## Documentation
 

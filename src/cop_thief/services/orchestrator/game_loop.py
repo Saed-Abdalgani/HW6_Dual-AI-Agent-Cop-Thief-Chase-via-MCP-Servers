@@ -55,6 +55,7 @@ class GameLoop:
     async def run_sub_game(self, index: int) -> SubGameResult:
         """Play one sub-game to completion via MCP."""
         await self._reset_sub_game()
+        self._turn.start_transcript(index)
         tracker = TurnTracker(self._cfg.thief_moves_first)
         turns = 0
         stalls = 0

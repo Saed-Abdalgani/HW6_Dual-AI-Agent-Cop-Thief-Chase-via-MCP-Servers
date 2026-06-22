@@ -11,6 +11,7 @@ import random
 from cop_thief.mcp_servers import _state
 from cop_thief.sdk._facade_types import FullGameReport, GameState, HealthStatus
 from cop_thief.services.engine._lifecycle_types import SubGameResult
+from cop_thief.services.nlp.transcript import TranscriptLogger
 from cop_thief.services.orchestrator._mcp_direct import DirectMcpBackend
 from cop_thief.services.orchestrator._mcp_launcher import McpServerLauncher
 from cop_thief.services.orchestrator.estimator import OpponentEstimator
@@ -63,7 +64,12 @@ class CopThiefSDK:
         self._estimator = OpponentEstimator(config.grid_size)
         self._strategy = create_strategy(config, self._llm)
         self._turn = TurnController(
-            config, self._mcp, self._strategy, self._estimator, ActionValidator(),
+            config,
+            self._mcp,
+            self._strategy,
+            self._estimator,
+            ActionValidator(),
+            TranscriptLogger(config.nlp.transcript_dir),
         )
         self._loop = GameLoop(
             config, self._mcp, self._turn, random.Random(config.seed),

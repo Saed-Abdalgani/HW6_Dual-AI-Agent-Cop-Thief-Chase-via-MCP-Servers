@@ -58,12 +58,20 @@ class EmailConfig(BaseModel):
     to: str = Field(..., min_length=1, description="Recipient email address.")
 
 
+class NlpConfig(BaseModel):
+    """Natural-language message behavior."""
+
+    tone: Literal["balanced", "deceptive", "probing"] = "balanced"
+    transcript_dir: str = Field("results", min_length=1)
+
+
 # Re-export enums so callers can import from one place when needed.
 __all__ = [
     "EmailConfig",
     "GatekeeperConfig",
     "LlmConfig",
     "McpConfig",
+    "NlpConfig",
     "ScoringConfig",
     "StartMode",
     "Strategy",

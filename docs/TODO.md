@@ -61,7 +61,7 @@ A task is **Done** only when ALL of the following hold:
 | P2 | Two MCP servers (cop, thief) | P1 | `[ ]` | Tools callable w/ token; unauth rejected |
 | P3 | Orchestrator + local E2E | P1 | `[x]` | 6 sub-games run locally, 0 manual steps |
 | P4 | Decision strategy | P1 | `[x]` | Strategy selectable; baseline completes games |
-| P5 | Natural-language messaging | P1 | `[ ]` | Free-text turns; ambiguity handled |
+| P5 | Natural-language messaging | P1 | `[x]` | Free-text turns; ambiguity handled |
 | P6 | GUI | P2 | `[ ]` | Visual run matches engine state |
 | P7 | Cloud deploy + auth | P1 | `[ ]` | Public URLs live; revoke verified |
 | P8 | Gmail JSON report | P1 | `[ ]` | JSON-only email after 6 valid sub-games |
@@ -418,46 +418,46 @@ Q-learning, and an LLM strategy — chosen via config and feeding off the oppone
 **Goal:** Replace rigid signaling with **free-text** inter-agent messages; agents encode intent in
 natural language, parse incoming messages, and update opponent estimates under ambiguity.
 
-**Priority:** P1 · **Status:** `[ ]` · **Traces:** PRD §8.3 (FR-NL1..4), PLAN §13, §14,
+**Priority:** P1 · **Status:** `[x]` · **Traces:** PRD §8.3 (FR-NL1..4), PLAN §13, §14,
 `docs/PRD_nl_protocol.md`.
 
 ### Per-mechanism PRD
-- [ ] **T-P5-01 (P1)** — Write `docs/PRD_nl_protocol.md` (message style, intents, ambiguity policy).
+- [x] **T-P5-01 (P1)** — Write `docs/PRD_nl_protocol.md` (message style, intents, ambiguity policy).
   - DoD: Defines that raw coordinate transfer is forbidden; gives examples. _Traces:_ FR-NL1, ADR-6.
 
 ### Encoder (`services/nlp/encoder.py`)
-- [ ] **T-P5-02 (P1)** — Implement state→NL message generation (taunts/hints/bluffs), not raw coords.
+- [x] **T-P5-02 (P1)** — Implement state→NL message generation (taunts/hints/bluffs), not raw coords.
   - DoD: Output is natural language; no literal `(r,c)` of self. _Traces:_ FR-NL1.
-- [ ] **T-P5-03 (P2)** — Support deception/partial-truth styles (configurable tone).
+- [x] **T-P5-03 (P2)** — Support deception/partial-truth styles (configurable tone).
   - DoD: Thief can mislead; cop can probe; documented. _Traces:_ PRD §2, challenges.
 
 ### Parser & estimator (`services/nlp/parser.py`, `orchestrator/estimator.py`)
-- [ ] **T-P5-04 (P1)** — Implement NL message parsing → intent + region/direction cues.
+- [x] **T-P5-04 (P1)** — Implement NL message parsing → intent + region/direction cues.
   - DoD: Extracts coarse cues from free text; tested on samples. _Traces:_ FR-NL2.
-- [ ] **T-P5-05 (P1)** — Upgrade `OpponentEstimator` to fuse NL cues + move history into a belief.
+- [x] **T-P5-05 (P1)** — Upgrade `OpponentEstimator` to fuse NL cues + move history into a belief.
   - DoD: Belief updates over turns; uncertainty represented. _Traces:_ FR-NL2, partial observability.
-- [ ] **T-P5-06 (P1)** — Handle ambiguity/misunderstanding gracefully (no crash, sane default).
+- [x] **T-P5-06 (P1)** — Handle ambiguity/misunderstanding gracefully (no crash, sane default).
   - DoD: Garbled/empty message ⇒ estimate unchanged + heuristic fallback. _Traces:_ FR-NL3.
 
 ### Integration
-- [ ] **T-P5-07 (P1)** — Route all turn messages through MCP `send_message`/`receive_message`.
+- [x] **T-P5-07 (P1)** — Route all turn messages through MCP `send_message`/`receive_message`.
   - DoD: Every turn exchanges an NL message via MCP; visible in logs. _Traces:_ FR-NL4, AC-6.
-- [ ] **T-P5-08 (P2)** — Log NL transcript per sub-game to `results/` for evidence.
+- [x] **T-P5-08 (P2)** — Log NL transcript per sub-game to `results/` for evidence.
   - DoD: Transcript saved; referenced by README. _Traces:_ README §3, CC-LOG.
 
 ### Phase P5 tests
-- [ ] **T-P5-09 (P1)** — Unit: encoder produces NL (no raw self-coords) for varied states.
-- [ ] **T-P5-10 (P1)** — Unit: parser extracts expected cues from sample messages.
-- [ ] **T-P5-11 (P1)** — Unit: estimator updates belief from NL + history.
-- [ ] **T-P5-12 (P1)** — Robustness: ambiguous/empty message handled without failure.
-- [ ] **T-P5-13 (P1)** — Integration: full sub-game where turns use NL via MCP.
+- [x] **T-P5-09 (P1)** — Unit: encoder produces NL (no raw self-coords) for varied states.
+- [x] **T-P5-10 (P1)** — Unit: parser extracts expected cues from sample messages.
+- [x] **T-P5-11 (P1)** — Unit: estimator updates belief from NL + history.
+- [x] **T-P5-12 (P1)** — Robustness: ambiguous/empty message handled without failure.
+- [x] **T-P5-13 (P1)** — Integration: full sub-game where turns use NL via MCP.
 
 ### Phase P5 Definition of Done (exit criteria)
-- [ ] 100% of inter-agent turns exchange natural-language messages via MCP (AC-6).
-- [ ] No reliance on direct numeric coordinate transfer.
-- [ ] Ambiguity/misunderstanding handled gracefully with fallback.
-- [ ] `docs/PRD_nl_protocol.md` complete; NL transcript logged.
-- [ ] Ruff clean; coverage ≥ 85%.
+- [x] 100% of inter-agent turns exchange natural-language messages via MCP (AC-6).
+- [x] No reliance on direct numeric coordinate transfer.
+- [x] Ambiguity/misunderstanding handled gracefully with fallback.
+- [x] `docs/PRD_nl_protocol.md` complete; NL transcript logged.
+- [x] Ruff clean; coverage ≥ 85%.
 
 ---
 
@@ -646,7 +646,7 @@ Maps PRD §14 risks to concrete mitigation tasks.
 
 | Risk (PRD §14) | Mitigation task(s) | Status |
 |----------------|--------------------|--------|
-| NL ambiguity ⇒ illegal/no action | T-P3-05, T-P5-06 (heuristic fallback) | `[ ]` |
+| NL ambiguity ⇒ illegal/no action | T-P3-05, T-P5-06 (heuristic fallback) | `[x]` |
 | LLM latency / rate limits | T-P0-16..19, T-P7-07 (Gatekeeper) | `[ ]` |
 | Exposing local Ollama | T-P7-05, T-P7-08 (hybrid, no exposure) | `[ ]` |
 | Leaked keys/tokens | T-P0-03/04/11/20 (env + redaction) | `[ ]` |

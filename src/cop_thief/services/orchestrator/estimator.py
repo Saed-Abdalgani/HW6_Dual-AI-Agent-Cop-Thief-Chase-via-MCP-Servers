@@ -1,70 +1,82 @@
-"""Opponent position belief from move history (pre-NL stub).
+"""Opponent position belief from move history and NL cues.
 
-Refined in Phase P5 with NL parsing.  Traces: FR-NL2, PLAN §14, T-P3-12.
+Traces: FR-NL2, FR-NL3, PLAN §14, T-P3-12, T-P5-05, T-P5-06.
 """
 
 from __future__ import annotations
 
 from cop_thief.constants import MOVE_DELTAS, Action, Agent
+from cop_thief.services.nlp.parser import ParsedMessage, cue_target, parse_message
 from cop_thief.services.orchestrator._types import Observation
 
 
 class OpponentEstimator:
-    """Maintain a coarse belief over the opponent's grid cell."""
+    """Maintain per-agent coarse beliefs over the opponent's grid cell."""
 
     def __init__(self, grid_size: tuple[int, int]) -> None:
         """Start with the grid centre as the initial belief."""
         self._grid = grid_size
-        self._belief: tuple[int, int] = (grid_size[0] // 2, grid_size[1] // 2)
+        center = (grid_size[0] // 2, grid_size[1] // 2)
+        self._beliefs: dict[Agent, tuple[int, int]] = {
+            Agent.COP: center,
+            Agent.THIEF: center,
+        }
+        self._uncertainty: dict[Agent, float] = {Agent.COP: 1.0, Agent.THIEF: 1.0}
+        self._last_cue: dict[Agent, ParsedMessage | None] = {
+            Agent.COP: None,
+            Agent.THIEF: None,
+        }
 
     @property
     def estimate(self) -> tuple[int, int]:
-        """Current best-guess opponent position."""
-        return self._belief
+        """Current cop-side best guess of the thief position."""
+        return self._beliefs[Agent.COP]
 
-    def update_from_message(self, text: str) -> None:
-        """Stub: nudge belief toward mentioned compass directions."""
-        if not text:
+    def uncertainty_for(self, agent: Agent) -> float:
+        """Return uncertainty in the opponent estimate for *agent*."""
+        return self._uncertainty[agent]
+
+    def update_from_message(self, text: str, receiver: Agent = Agent.COP) -> ParsedMessage:
+        """Fuse a free-text message into the receiver's opponent belief."""
+        parsed = parse_message(text)
+        self._last_cue[receiver] = parsed
+        if parsed.ambiguous:
+            self._uncertainty[receiver] = min(1.0, self._uncertainty[receiver] + 0.15)
+            return parsed
+        current = self._beliefs[receiver]
+        target = cue_target(parsed, self._grid, current)
+        self._beliefs[receiver] = self._blend(current, target, parsed.confidence)
+        self._uncertainty[receiver] = max(0.1, 1.0 - parsed.confidence)
+        return parsed
+
+    def update_from_action(
+        self,
+        agent: Agent,
+        action: Action,
+        new_pos: tuple[int, int] | None = None,
+    ) -> None:
+        """Fuse observed move history into both agents' coarse beliefs."""
+        if new_pos is None:
             return
-        lower = text.lower()
-        r, c = self._belief
-        rows, cols = self._grid
-        if "north" in lower or "up" in lower:
-            r = max(0, r - 1)
-        if "south" in lower or "down" in lower:
-            r = min(rows - 1, r + 1)
-        if "west" in lower or "left" in lower:
-            c = max(0, c - 1)
-        if "east" in lower or "right" in lower:
-            c = min(cols - 1, c + 1)
-        self._belief = (r, c)
-
-    def update_from_action(self, agent: Agent, action: Action, own_pos: tuple[int, int]) -> None:
-        """Shift belief when we observe our own move (no direct opponent view)."""
-        if agent is Agent.COP:
-            dr, dc = MOVE_DELTAS.get(action, (0, 0))
-            nr, nc = own_pos[0] - dr, own_pos[1] - dc
-            rows, cols = self._grid
-            if 0 <= nr < rows and 0 <= nc < cols:
-                self._belief = (nr, nc)
+        observer = Agent.THIEF if agent is Agent.COP else Agent.COP
+        self._beliefs[observer] = self._clamp(new_pos)
+        self._uncertainty[observer] = max(0.05, self._uncertainty[observer] - 0.2)
+        self._drift_other_belief(agent, action)
 
     def for_agent(self, agent: Agent, own_pos: tuple[int, int]) -> tuple[int, int]:
         """Return opponent estimate relative to *agent*."""
-        if agent is Agent.COP:
-            return self._belief
-        # Thief estimates cop as mirror of belief when cop moved toward thief
-        return self._belief
+        return self.estimate_for(agent)
 
     def reset(self, cop_pos: tuple[int, int], thief_pos: tuple[int, int]) -> None:
         """Reset beliefs at sub-game start (cop sees thief estimate, vice versa)."""
-        self._belief = thief_pos  # cop's estimate of thief
-        self._cop_estimate = cop_pos
+        self._beliefs[Agent.COP] = thief_pos
+        self._beliefs[Agent.THIEF] = cop_pos
+        self._uncertainty = {Agent.COP: 0.1, Agent.THIEF: 0.1}
+        self._last_cue = {Agent.COP: None, Agent.THIEF: None}
 
     def estimate_for(self, agent: Agent) -> tuple[int, int]:
         """Return opponent position estimate for *agent*."""
-        if agent is Agent.COP:
-            return self._belief
-        return getattr(self, "_cop_estimate", (0, 0))
+        return self._beliefs[agent]
 
     def build_observation(
         self,
@@ -88,3 +100,26 @@ class OpponentEstimator:
             move_count=move_count,
             last_message=last_message,
         )
+
+    def _blend(
+        self,
+        current: tuple[int, int],
+        target: tuple[int, int],
+        confidence: float,
+    ) -> tuple[int, int]:
+        weight = 0.75 if confidence >= 0.65 else 0.5
+        r = round(current[0] * (1 - weight) + target[0] * weight)
+        c = round(current[1] * (1 - weight) + target[1] * weight)
+        return self._clamp((r, c))
+
+    def _clamp(self, pos: tuple[int, int]) -> tuple[int, int]:
+        rows, cols = self._grid
+        return (min(max(pos[0], 0), rows - 1), min(max(pos[1], 0), cols - 1))
+
+    def _drift_other_belief(self, agent: Agent, action: Action) -> None:
+        if action is Action.PLACE_BARRIER:
+            return
+        dr, dc = MOVE_DELTAS.get(action, (0, 0))
+        current = self._beliefs[agent]
+        self._beliefs[agent] = self._clamp((current[0] + dr, current[1] + dc))
+        self._uncertainty[agent] = min(1.0, self._uncertainty[agent] + 0.05)
