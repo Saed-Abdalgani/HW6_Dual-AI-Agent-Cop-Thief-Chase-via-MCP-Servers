@@ -58,6 +58,18 @@ uv run cop-thief-verify-cloud
 See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for Docker, Render-style service config, token
 rotation, and revocation checks.
 
+## JSON Email Report (Phase P8)
+
+After a full six-sub-game run, the SDK builds the PRD section 12 JSON report and dispatches it
+through Gmail API when `GMAIL_ACCESS_TOKEN` is present:
+
+```bash
+set GMAIL_ACCESS_TOKEN=<oauth-access-token>
+uv run cop-thief
+```
+
+The email body is the report JSON only. Identity fields live in `config/config.yaml` under `report`.
+
 
 ## Documentation
 

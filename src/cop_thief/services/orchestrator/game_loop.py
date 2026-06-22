@@ -4,7 +4,9 @@ Traces: FR-L1, FR-L2, FR-L3, T-P3-09, T-P3-10.
 """
 
 from __future__ import annotations
+
 import random
+
 from cop_thief.constants import Outcome
 from cop_thief.services.engine._board_helpers import choose_start_positions
 from cop_thief.services.engine._lifecycle_types import FullGameResult, SubGameResult

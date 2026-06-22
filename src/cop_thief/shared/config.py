@@ -25,6 +25,7 @@ from cop_thief.shared._config_schemas import (
     LlmConfig,
     McpConfig,
     NlpConfig,
+    ReportConfig,
     ScoringConfig,
 )
 
@@ -35,6 +36,7 @@ __all__ = [
     "LlmConfig",
     "McpConfig",
     "NlpConfig",
+    "ReportConfig",
     "ScoringConfig",
 ]
 
@@ -68,6 +70,7 @@ class Config(BaseModel):
     gatekeeper: GatekeeperConfig = Field(default_factory=GatekeeperConfig)
     email: EmailConfig
     nlp: NlpConfig = Field(default_factory=NlpConfig)
+    report: ReportConfig = Field(default_factory=ReportConfig)
 
     # Misc
     timezone: str = "UTC"

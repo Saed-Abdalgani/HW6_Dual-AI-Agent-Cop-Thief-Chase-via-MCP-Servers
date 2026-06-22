@@ -11,6 +11,7 @@ import pytest
 from cop_thief.constants import Outcome
 from cop_thief.mcp_servers import _state
 from cop_thief.sdk.facade import CopThiefSDK
+from cop_thief.services.report.emailer import ReportSendResult
 from cop_thief.shared.auth import default_store
 
 
@@ -67,6 +68,15 @@ async def _mock_llm(prompt: str) -> str:
     return json.dumps({"action": "stay", "nl_message": "I'll wait here."})
 
 
+class _FakeReportSender:
+    def __init__(self) -> None:
+        self.body = ""
+
+    async def send(self, json_body: str) -> ReportSendResult:
+        self.body = json_body
+        return ReportSendResult(sent=True, message_id="fake-message")
+
+
 def test_full_game_six_valid_subgames(fast_config: Path) -> None:  # noqa: ARG001
     """Full 6-valid-sub-game loop with direct MCP and mocked LLM."""
     from cop_thief.shared.config import Config
@@ -79,6 +89,7 @@ def test_full_game_six_valid_subgames(fast_config: Path) -> None:  # noqa: ARG00
     assert all(sg.winner in (Outcome.COP_WIN, Outcome.THIEF_WIN) for sg in report.result.sub_games)
     assert report.cop_total > 0
     assert report.thief_total > 0
+    assert report.report_json.startswith("{")
 
 
 def test_technical_failure_rerun(fast_config: Path, monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: ARG001
@@ -100,6 +111,20 @@ def test_technical_failure_rerun(fast_config: Path, monkeypatch: pytest.MonkeyPa
     report = sdk.run_full_game()
     assert report.sub_games_played == 6
     assert calls["n"] > 6
+
+
+def test_full_game_auto_sends_json_report(fast_config: Path) -> None:  # noqa: ARG001
+    """End-of-game report dispatch fires automatically with mocked Gmail sender."""
+    from cop_thief.shared.config import Config
+
+    config = Config.from_env()
+    sender = _FakeReportSender()
+    sdk = CopThiefSDK(config, use_direct_mcp=True, llm_caller=_mock_llm, report_sender=sender)
+    report = sdk.run_full_game()
+    assert report.email is not None
+    assert report.email.sent is True
+    assert '"sub_games"' in sender.body
+    assert sender.body == report.report_json
 
 
 def test_sub_game_uses_nl_transcript_via_mcp(fast_config: Path) -> None:

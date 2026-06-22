@@ -20,6 +20,7 @@ from cop_thief.services.orchestrator.llm_client import LlmClient
 from cop_thief.services.orchestrator.mcp_client import McpClient
 from cop_thief.services.orchestrator.turn_controller import TurnController
 from cop_thief.services.orchestrator.validator import ActionValidator
+from cop_thief.services.report.dispatch import ReportSender, dispatch_final_report
 from cop_thief.services.strategy.factory import create_strategy
 from cop_thief.shared.auth import default_store
 from cop_thief.shared.config import Config
@@ -36,6 +37,7 @@ class CopThiefSDK:
         use_direct_mcp: bool = True,
         auto_launch_servers: bool = False,
         llm_caller: object | None = None,
+        report_sender: ReportSender | None = None,
     ) -> None:
         """Initialize orchestrator wiring from *config*.
 
@@ -44,12 +46,14 @@ class CopThiefSDK:
             use_direct_mcp: When True, call MCP tools in-process (default for tests/CLI).
             auto_launch_servers: Spawn MCP server subprocesses when not using direct MCP.
             llm_caller: Optional async callable(prompt) -> str for tests.
+            report_sender: Optional report sender override for tests.
 
         """
         self._config = config
         self._use_direct = use_direct_mcp
         self._auto_launch = auto_launch_servers
         self._gk = Gatekeeper(config.gatekeeper)
+        self._report_sender = report_sender
         cop_tok = Config.load_secret("MCP_COP_TOKEN") or ""
         thief_tok = Config.load_secret("MCP_THIEF_TOKEN") or ""
         if cop_tok:
@@ -92,7 +96,14 @@ class CopThiefSDK:
                 result = self._run_async(self._loop.run_full_game())
         else:
             result = self._run_async(self._loop.run_full_game())
-        return FullGameReport.from_result(result)
+        report_json, email = self._run_async(
+            dispatch_final_report(self._config, self._gk, result, self._report_sender),
+        )
+        return FullGameReport.from_result(
+            result,
+            report_json=str(report_json),
+            email=email,  # type: ignore[arg-type]
+        )
 
     def run_sub_game(self, index: int = 1) -> SubGameResult:
         """Run a single sub-game and return its result."""

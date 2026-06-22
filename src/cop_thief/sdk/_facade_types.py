@@ -9,6 +9,7 @@ from dataclasses import dataclass
 
 from cop_thief.services.engine._lifecycle_types import FullGameResult
 from cop_thief.services.orchestrator._types import GameState, HealthStatus
+from cop_thief.services.report.emailer import ReportSendResult
 
 __all__ = ["FullGameReport", "GameState", "HealthStatus"]
 
@@ -22,9 +23,17 @@ class FullGameReport:
     cop_total: int = 0
     thief_total: int = 0
     message: str = ""
+    report_json: str = ""
+    email: ReportSendResult | None = None
 
     @classmethod
-    def from_result(cls, result: FullGameResult) -> FullGameReport:
+    def from_result(
+        cls,
+        result: FullGameResult,
+        *,
+        report_json: str = "",
+        email: ReportSendResult | None = None,
+    ) -> FullGameReport:
         """Build a report wrapper from a :class:`FullGameResult`."""
         return cls(
             result=result,
@@ -32,4 +41,6 @@ class FullGameReport:
             cop_total=result.totals.cop,
             thief_total=result.totals.thief,
             message="Full game complete.",
+            report_json=report_json,
+            email=email,
         )

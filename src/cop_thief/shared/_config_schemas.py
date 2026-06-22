@@ -65,6 +65,14 @@ class NlpConfig(BaseModel):
     transcript_dir: str = Field("results", min_length=1)
 
 
+class ReportConfig(BaseModel):
+    """Final JSON report identity fields."""
+
+    group_name: str = Field("TBD", min_length=1)
+    students: list[str] = Field(default_factory=list)
+    github_repo: str = Field("TBD", min_length=1)
+
+
 # Re-export enums so callers can import from one place when needed.
 __all__ = [
     "EmailConfig",
@@ -72,6 +80,7 @@ __all__ = [
     "LlmConfig",
     "McpConfig",
     "NlpConfig",
+    "ReportConfig",
     "ScoringConfig",
     "StartMode",
     "Strategy",

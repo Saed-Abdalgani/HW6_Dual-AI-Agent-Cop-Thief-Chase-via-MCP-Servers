@@ -64,7 +64,7 @@ A task is **Done** only when ALL of the following hold:
 | P5 | Natural-language messaging | P1 | `[x]` | Free-text turns; ambiguity handled |
 | P6 | GUI | P2 | `[x]` | Visual run matches engine state |
 | P7 | Cloud deploy + auth | P1 | `[!]` | Deploy artifacts ready; public URLs need cloud account |
-| P8 | Gmail JSON report | P1 | `[ ]` | JSON-only email after 6 valid sub-games |
+| P8 | Gmail JSON report | P1 | `[x]` | JSON-only email after 6 valid sub-games |
 | P9 | Hardening + README + audit | P1 | `[ ]` | All acceptance criteria green |
 
 ---
@@ -91,7 +91,8 @@ These are the PRD §17 / PLAN §21 open questions. Capture answers here before d
 - [x] **D-02 (P0)** — Choose LLM path: cloud API (Option 1) vs hybrid Ollama (Option 3). _Decision: cloud API default; provider/model from config (pluggable)._ _Traces:_ FR-LLM1/2.
 - [x] **D-03 (P0)** — Choose cloud platform (Prefect Cloud vs alternative). _Decision:
   Docker-capable cloud with Render-style template._ _Traces:_ G6, PLAN §15.2.
-- [ ] **D-04 (P0)** — Choose Gmail auth (OAuth / service account / app-password). _Traces:_ FR-E3. _(deferred to P8)_
+- [x] **D-04 (P0)** — Choose Gmail auth (OAuth / service account / app-password).
+  _Decision: Gmail API OAuth access token via `GMAIL_ACCESS_TOKEN`._ _Traces:_ FR-E3.
 - [x] **D-05 (P0)** — Choose config format (`config.yaml` vs `config.json`). _Decision: YAML._ _Traces:_ FR-C1.
 - [x] **D-06 (P1)** — Decide GUI framework (Pygame / Tkinter / Streamlit). _Decision: Tkinter._
   _Traces:_ FR-G1.
@@ -543,39 +544,39 @@ two public URLs, using the hybrid architecture so the local machine/Ollama is ne
 **Goal:** After 6 valid sub-games, the cop automatically sends a **JSON-only** email report to the
 destination address using the Gmail API.
 
-**Priority:** P1 · **Status:** `[ ]` · **Traces:** PRD §8.6 (FR-E1..5), §12 (report contract), PLAN §10.5.
+**Priority:** P1 · **Status:** `[x]` · **Traces:** PRD §8.6 (FR-E1..5), §12 (report contract), PLAN §10.5.
 
 ### Report builder (`services/report/builder.py`)
-- [ ] **T-P8-01 (P1)** — Build the report JSON per PRD §12 contract.
+- [x] **T-P8-01 (P1)** — Build the report JSON per PRD §12 contract.
   - Sub: `group_name`, `students[]`, `github_repo`, `cop_mcp_url`, `thief_mcp_url`, `timezone`,
     `sub_games[]`, `totals.{cop,thief}`. _Traces:_ FR-E5.
-- [ ] **T-P8-02 (P1)** — Populate `sub_games[]` from `ResultCollector` (winner, moves, barriers, scores).
+- [x] **T-P8-02 (P1)** — Populate `sub_games[]` from `ResultCollector` (winner, moves, barriers, scores).
   - DoD: 6 entries; matches PLAN §10.4. _Traces:_ FR-S2.
-- [ ] **T-P8-03 (P1)** — Populate `totals` from accumulated scores.
+- [x] **T-P8-03 (P1)** — Populate `totals` from accumulated scores.
   - DoD: Totals equal sum of sub-game scores. _Traces:_ FR-S3.
-- [ ] **T-P8-04 (P1)** — Validate output is strictly valid JSON (schema check).
+- [x] **T-P8-04 (P1)** — Validate output is strictly valid JSON (schema check).
   - DoD: Parser round-trips; no extra fields. _Traces:_ FR-E4.
 
 ### Emailer (`services/report/emailer.py`)
-- [ ] **T-P8-05 (P1)** — Implement Gmail API send (auth per D-04) via Gatekeeper.
+- [x] **T-P8-05 (P1)** — Implement Gmail API send (auth per D-04) via Gatekeeper.
   - DoD: Sends to `email.to`; creds from env. _Traces:_ FR-E2/E3, NFR-5.
-- [ ] **T-P8-06 (P1)** — Ensure email **body is JSON only** (no greeting/text/comments).
+- [x] **T-P8-06 (P1)** — Ensure email **body is JSON only** (no greeting/text/comments).
   - DoD: Body byte-for-byte equals report JSON. _Traces:_ FR-E4, AC-8.
-- [ ] **T-P8-07 (P1)** — Trigger send automatically at end of full game (cop agent).
+- [x] **T-P8-07 (P1)** — Trigger send automatically at end of full game (cop agent).
   - DoD: No manual step; fires only after 6 valid sub-games. _Traces:_ FR-E1, FR-L4, AC-2.
-- [ ] **T-P8-08 (P2)** — Retry/handle Gmail quota/auth failures via Gatekeeper.
+- [x] **T-P8-08 (P2)** — Retry/handle Gmail quota/auth failures via Gatekeeper.
   - DoD: Transient failures retried; clear error on hard failure. _Traces:_ Risk, NFR-5.
 
 ### Phase P8 tests
-- [ ] **T-P8-09 (P1)** — Unit: report builder produces schema-valid JSON for sample results.
-- [ ] **T-P8-10 (P1)** — Unit: email body contains JSON only (no extra characters).
-- [ ] **T-P8-11 (P1)** — Integration: end-of-game auto-send with **mocked** Gmail client.
+- [x] **T-P8-09 (P1)** — Unit: report builder produces schema-valid JSON for sample results.
+- [x] **T-P8-10 (P1)** — Unit: email body contains JSON only (no extra characters).
+- [x] **T-P8-11 (P1)** — Integration: end-of-game auto-send with **mocked** Gmail client.
 
 ### Phase P8 Definition of Done (exit criteria)
-- [ ] JSON-only report email auto-sent to the destination after 6 valid sub-games.
-- [ ] Report matches PRD §12 contract and validates as JSON.
-- [ ] Gmail credentials sourced from env; failures handled.
-- [ ] Ruff clean; coverage ≥ 85%.
+- [x] JSON-only report email auto-sent to the destination after 6 valid sub-games.
+- [x] Report matches PRD §12 contract and validates as JSON.
+- [x] Gmail credentials sourced from env; failures handled.
+- [x] Ruff clean; coverage ≥ 85%.
 
 ---
 
@@ -655,7 +656,7 @@ Maps PRD §14 risks to concrete mitigation tasks.
 | Leaked keys/tokens | T-P0-03/04/11/20 (env + redaction) | `[ ]` |
 | Sub-game technical failure | T-P1-19, T-P3-10/16 (auto-rerun) | `[ ]` |
 | Cloud auth misconfig | T-P7-06, T-P7-10 (auth + revoke tests) | `[ ]` |
-| Gmail quota/auth issues | T-P8-08 (retry) | `[ ]` |
+| Gmail quota/auth issues | T-P8-08 (retry) | `[x]` |
 | Non-matching bonus JSON | T-BN-01/04 (shared schema) | `[ ]` |
 
 ---
