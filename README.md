@@ -32,6 +32,32 @@ uv run python -m cop_thief.mcp_servers.thief_server
 Every orchestrated turn sends a coordinate-free free-text message through MCP. Sub-game transcripts
 are written as JSON Lines files under `results/nl_transcript_subgame_<n>.jsonl`.
 
+## GUI Replay (Phase P6)
+
+Launch the SDK-only Tkinter replay GUI:
+
+```bash
+uv run cop-thief-gui
+```
+
+The GUI runs autonomous sub-games, animates SDK replay frames, shows scores and the latest NL
+message, and can capture board evidence into `assets/`.
+
+![Cop-Thief GUI preview](assets/gui_phase6_preview.png)
+
+## Cloud MCP Deployment (Phase P7)
+
+Build one Docker image and run it twice, once with `SERVER_ROLE=cop` and once with
+`SERVER_ROLE=thief`. After replacing the URLs in `config/config.cloud.yaml`, verify public auth:
+
+```bash
+set CONFIG_PATH=config/config.cloud.yaml
+uv run cop-thief-verify-cloud
+```
+
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for Docker, Render-style service config, token
+rotation, and revocation checks.
+
 
 ## Documentation
 

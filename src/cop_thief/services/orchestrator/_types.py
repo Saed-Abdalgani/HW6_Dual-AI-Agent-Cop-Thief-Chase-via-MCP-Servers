@@ -59,3 +59,6 @@ class GameState:
     over: bool = False
     winner: str | None = None
     scores: dict[str, int] = field(default_factory=lambda: {"cop": 0, "thief": 0})
+    sub_game_index: int = 0
+    latest_message: str = ""
+    grid_size: tuple[int, int] = (5, 5)

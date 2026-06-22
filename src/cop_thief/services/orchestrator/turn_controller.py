@@ -31,6 +31,10 @@ class TurnResult:
     action: Action
     legal: bool
     nl_message: str
+    new_pos: tuple[int, int] | None = None
+    barrier_placed: bool = False
+    over: bool = False
+    winner: str | None = None
 
 
 class TurnController:
@@ -96,9 +100,19 @@ class TurnController:
             apply_resp = await self._mcp.apply_action(agent.value, fallback.value)
             action = fallback
             legal = bool(apply_resp.get("legal", False))
+        delta = apply_resp.get("state_delta", {})
+        new_pos = tuple(delta["new_pos"]) if delta.get("new_pos") else None
         if legal:
-            new_pos = apply_resp.get("state_delta", {}).get("new_pos")
-            self._estimator.update_from_action(agent, action, tuple(new_pos) if new_pos else None)
+            self._estimator.update_from_action(agent, action, new_pos)
         if self._transcript:
             self._transcript.record(agent, action, nl_message, move_count)
-        return TurnResult(agent=agent, action=action, legal=legal, nl_message=nl_message)
+        return TurnResult(
+            agent=agent,
+            action=action,
+            legal=legal,
+            nl_message=nl_message,
+            new_pos=new_pos,
+            barrier_placed=bool(delta.get("barrier_placed", False)),
+            over=bool(delta.get("over", False)),
+            winner=delta.get("winner"),
+        )

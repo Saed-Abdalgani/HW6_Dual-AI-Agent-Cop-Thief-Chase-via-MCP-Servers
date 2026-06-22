@@ -5,22 +5,15 @@ Traces: FR-MCP1, FR-MCP5, FR-C1, T-P2-09, T-P2-10.
 
 from __future__ import annotations
 
-import os
-from urllib.parse import urlparse
-
 from fastmcp import FastMCP
 
 from cop_thief.mcp_servers import tools
-from cop_thief.shared.auth import default_store
+from cop_thief.mcp_servers.runtime import bind_host_port, seed_tokens_from_env
 from cop_thief.shared.config import Config
 
 mcp = FastMCP("Cop Server")
 
-# Seed tokens from environment on startup
-for agent, env_var in [("cop", "MCP_COP_TOKEN"), ("thief", "MCP_THIEF_TOKEN")]:
-    val = os.environ.get(env_var)
-    if val:
-        default_store.register_token(agent, val)
+seed_tokens_from_env()
 
 
 @mcp.tool()
@@ -73,5 +66,5 @@ def place_barrier(token: str) -> dict:
 
 if __name__ == "__main__":
     cfg = Config.from_env()
-    url = urlparse(cfg.mcp.cop_url)
-    mcp.run(transport="sse", host=url.hostname or "localhost", port=url.port or 8001)
+    host, port = bind_host_port(cfg, "cop")
+    mcp.run(transport="sse", host=host, port=port)

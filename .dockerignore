@@ -1,0 +1,13 @@
+.git
+.venv
+.pytest_cache
+.ruff_cache
+htmlcov
+data
+results
+notebooks
+.env
+*.key
+*.pem
+*.p12
+secrets

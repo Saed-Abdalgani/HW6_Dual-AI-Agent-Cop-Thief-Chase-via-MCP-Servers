@@ -27,6 +27,9 @@ dev = [
 
 [project.scripts]
 cop-thief = "cop_thief.cli.main:main"
+cop-thief-gui = "cop_thief.gui.app:main"
+cop-thief-mcp = "cop_thief.mcp_servers.server:main"
+cop-thief-verify-cloud = "cop_thief.cli.verify_cloud:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/cop_thief"]

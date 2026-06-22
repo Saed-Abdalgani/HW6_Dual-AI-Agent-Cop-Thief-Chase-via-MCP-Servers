@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: cop-thief-cop-mcp
+    env: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: SERVER_ROLE
+        value: cop
+      - key: CONFIG_PATH
+        value: config/config.cloud.yaml
+      - key: MCP_COP_TOKEN
+        sync: false
+      - key: MCP_THIEF_TOKEN
+        sync: false
+      - key: MCP_REVOKED_TOKENS
+        sync: false
+  - type: web
+    name: cop-thief-thief-mcp
+    env: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: SERVER_ROLE
+        value: thief
+      - key: CONFIG_PATH
+        value: config/config.cloud.yaml
+      - key: MCP_COP_TOKEN
+        sync: false
+      - key: MCP_THIEF_TOKEN
+        sync: false
+      - key: MCP_REVOKED_TOKENS
+        sync: false

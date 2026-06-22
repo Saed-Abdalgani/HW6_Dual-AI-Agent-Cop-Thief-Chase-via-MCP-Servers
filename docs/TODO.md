@@ -62,8 +62,8 @@ A task is **Done** only when ALL of the following hold:
 | P3 | Orchestrator + local E2E | P1 | `[x]` | 6 sub-games run locally, 0 manual steps |
 | P4 | Decision strategy | P1 | `[x]` | Strategy selectable; baseline completes games |
 | P5 | Natural-language messaging | P1 | `[x]` | Free-text turns; ambiguity handled |
-| P6 | GUI | P2 | `[ ]` | Visual run matches engine state |
-| P7 | Cloud deploy + auth | P1 | `[ ]` | Public URLs live; revoke verified |
+| P6 | GUI | P2 | `[x]` | Visual run matches engine state |
+| P7 | Cloud deploy + auth | P1 | `[!]` | Deploy artifacts ready; public URLs need cloud account |
 | P8 | Gmail JSON report | P1 | `[ ]` | JSON-only email after 6 valid sub-games |
 | P9 | Hardening + README + audit | P1 | `[ ]` | All acceptance criteria green |
 
@@ -89,10 +89,12 @@ These are the PRD §17 / PLAN §21 open questions. Capture answers here before d
 
 - [ ] **D-01 (P0)** — Confirm `group_name`, `students[]`, `github_repo`. _Traces:_ FR-E5, report contract.
 - [x] **D-02 (P0)** — Choose LLM path: cloud API (Option 1) vs hybrid Ollama (Option 3). _Decision: cloud API default; provider/model from config (pluggable)._ _Traces:_ FR-LLM1/2.
-- [ ] **D-03 (P0)** — Choose cloud platform (Prefect Cloud vs alternative). _Traces:_ G6, PLAN §15.2. _(deferred to P7)_
+- [x] **D-03 (P0)** — Choose cloud platform (Prefect Cloud vs alternative). _Decision:
+  Docker-capable cloud with Render-style template._ _Traces:_ G6, PLAN §15.2.
 - [ ] **D-04 (P0)** — Choose Gmail auth (OAuth / service account / app-password). _Traces:_ FR-E3. _(deferred to P8)_
 - [x] **D-05 (P0)** — Choose config format (`config.yaml` vs `config.json`). _Decision: YAML._ _Traces:_ FR-C1.
-- [ ] **D-06 (P1)** — Decide GUI framework (Pygame / Tkinter / Streamlit). _Traces:_ FR-G1.
+- [x] **D-06 (P1)** — Decide GUI framework (Pygame / Tkinter / Streamlit). _Decision: Tkinter._
+  _Traces:_ FR-G1.
 - [ ] **D-07 (P3)** — Decide whether to implement Q-learning. _Traces:_ FR-D2.
 
 ---
@@ -466,33 +468,33 @@ natural language, parse incoming messages, and update opponent estimates under a
 **Goal:** Provide a GUI (SDK-only consumer) that visualizes the grid, both agents, barriers,
 movement over time, and current scores — used as evidence the system works.
 
-**Priority:** P2 · **Status:** `[ ]` · **Traces:** PRD §8.7 (FR-G1..3), PLAN §6, NFR-7, UI/UX rules.
+**Priority:** P2 · **Status:** `[x]` · **Traces:** PRD §8.7 (FR-G1..3), PLAN §6, NFR-7, UI/UX rules.
 
-- [ ] **T-P6-01 (P2)** — Choose & scaffold GUI framework per D-06 (`gui/app.py`).
+- [x] **T-P6-01 (P2)** — Choose & scaffold GUI framework per D-06 (`gui/app.py`).
   - DoD: App launches; imports only `CopThiefSDK`. _Traces:_ FR-G3, NFR-7.
-- [ ] **T-P6-02 (P2)** — Render the grid sized from config (no hard-coded size).
+- [x] **T-P6-02 (P2)** — Render the grid sized from config (no hard-coded size).
   - DoD: 5×5 and 7×7 render correctly. _Traces:_ FR-G1, AC-5.
-- [ ] **T-P6-03 (P2)** — Render cop, thief, and barrier cells distinctly.
+- [x] **T-P6-03 (P2)** — Render cop, thief, and barrier cells distinctly.
   - DoD: Positions match `SDK.get_state()`. _Traces:_ FR-G1.
-- [ ] **T-P6-04 (P2)** — Animate/step movement over time across a sub-game.
+- [x] **T-P6-04 (P2)** — Animate/step movement over time across a sub-game.
   - DoD: Frames follow engine state per turn. _Traces:_ FR-G2.
-- [ ] **T-P6-05 (P2)** — Display current scores and sub-game index.
+- [x] **T-P6-05 (P2)** — Display current scores and sub-game index.
   - DoD: Scores update after each sub-game. _Traces:_ FR-G2.
-- [ ] **T-P6-06 (P3)** — Show latest NL message exchanged (transcript panel).
+- [x] **T-P6-06 (P3)** — Show latest NL message exchanged (transcript panel).
   - DoD: Optional panel reflects last messages. _Traces:_ README evidence.
-- [ ] **T-P6-07 (P2)** — Apply Nielsen heuristics: clear status, error states, minimal design.
+- [x] **T-P6-07 (P2)** — Apply Nielsen heuristics: clear status, error states, minimal design.
   - DoD: Loading/error/finished states visible. _Traces:_ UI/UX rules.
-- [ ] **T-P6-08 (P2)** — Capture GUI screenshots into `assets/` for README evidence.
+- [x] **T-P6-08 (P2)** — Capture GUI screenshots into `assets/` for README evidence.
   - DoD: Screenshots saved + referenced. _Traces:_ README §3.
 
 ### Phase P6 tests
-- [ ] **T-P6-09 (P2)** — Test GUI state-mapping logic (pure functions) without rendering.
-- [ ] **T-P6-10 (P3)** — Smoke test: GUI launches and renders one frame headlessly if feasible.
+- [x] **T-P6-09 (P2)** — Test GUI state-mapping logic (pure functions) without rendering.
+- [x] **T-P6-10 (P3)** — Smoke test: GUI launches and renders one frame headlessly if feasible.
 
 ### Phase P6 Definition of Done (exit criteria)
-- [ ] GUI shows grid, cop, thief, barriers, movement, and scores.
-- [ ] GUI calls SDK only (no engine/orchestrator imports).
-- [ ] Screenshots captured for README; Ruff clean; coverage ≥ 85% on testable GUI logic.
+- [x] GUI shows grid, cop, thief, barriers, movement, and scores.
+- [x] GUI calls SDK only (no engine/orchestrator imports).
+- [x] Screenshots captured for README; Ruff clean; coverage ≥ 85% on testable GUI logic.
 
 ---
 
@@ -501,31 +503,32 @@ movement over time, and current scores — used as evidence the system works.
 **Goal:** Deploy both MCP servers to a public platform with token auth and revocation, producing the
 two public URLs, using the hybrid architecture so the local machine/Ollama is never exposed.
 
-**Priority:** P1 · **Status:** `[ ]` · **Traces:** PRD §8.1 (FR-MCP5), §9 (NFR-1/2/3), PLAN §15, §16.
+**Priority:** P1 · **Status:** `[!]` · **Traces:** PRD §8.1 (FR-MCP5), §9 (NFR-1/2/3), PLAN §15, §16.
+**Blocker:** live public URL creation requires a cloud account/project and secret configuration.
 
 ### Deployment
-- [ ] **T-P7-01 (P1)** — Prepare deployment artifacts/config for chosen platform (D-03).
+- [x] **T-P7-01 (P1)** — Prepare deployment artifacts/config for chosen platform (D-03).
   - DoD: Reproducible deploy steps documented. _Traces:_ G6, PLAN §15.2.
-- [ ] **T-P7-02 (P1)** — Deploy **Cop MCP server** → obtain public `cop_mcp_url`.
+- [!] **T-P7-02 (P1)** — Deploy **Cop MCP server** → obtain public `cop_mcp_url`.
   - DoD: URL reachable over HTTPS with token. _Traces:_ FR-MCP5.
-- [ ] **T-P7-03 (P1)** — Deploy **Thief MCP server** → obtain public `thief_mcp_url`.
+- [!] **T-P7-03 (P1)** — Deploy **Thief MCP server** → obtain public `thief_mcp_url`.
   - DoD: URL reachable over HTTPS with token. _Traces:_ FR-MCP5.
-- [ ] **T-P7-04 (P1)** — Update config with cloud URLs (kept out of secrets; tokens in env).
+- [/] **T-P7-04 (P1)** — Update config with cloud URLs (kept out of secrets; tokens in env).
   - DoD: Orchestrator runs against cloud URLs. _Traces:_ FR-C1.
 
 ### Hybrid architecture & security hardening
-- [ ] **T-P7-05 (P1)** — Verify hybrid mode: LLM/Ollama local, client outbound HTTPS only.
+- [x] **T-P7-05 (P1)** — Verify hybrid mode: LLM/Ollama local, client outbound HTTPS only.
   - DoD: No inbound exposure of local machine; Ollama 11434 never published. _Traces:_ NFR-3, ADR-4.
-- [ ] **T-P7-06 (P1)** — Enforce token auth on cloud endpoints; rotate/revoke tested in cloud.
+- [/] **T-P7-06 (P1)** — Enforce token auth on cloud endpoints; rotate/revoke tested in cloud.
   - DoD: Unauth/revoked calls rejected on public URLs. _Traces:_ NFR-1/2, AC-7.
-- [ ] **T-P7-07 (P2)** — Configure Gatekeeper rate limits/timeouts for cloud latency.
+- [x] **T-P7-07 (P2)** — Configure Gatekeeper rate limits/timeouts for cloud latency.
   - DoD: Stable runs against cloud; backpressure verified. _Traces:_ NFR-5, PLAN §19.
-- [ ] **T-P7-08 (P2)** — If Ollama exposed at all, secure via ngrok policy / reverse proxy + auth.
+- [x] **T-P7-08 (P2)** — If Ollama exposed at all, secure via ngrok policy / reverse proxy + auth.
   - DoD: No unauthenticated path to Ollama. _Traces:_ PRD Option 2 warnings.
 
 ### Phase P7 tests
-- [ ] **T-P7-09 (P1)** — Integration: full game run against **cloud** MCP URLs (mock LLM ok).
-- [ ] **T-P7-10 (P1)** — Security: unauth + revoked-token rejected on both cloud endpoints.
+- [/] **T-P7-09 (P1)** — Integration: full game run against **cloud** MCP URLs (mock LLM ok).
+- [/] **T-P7-10 (P1)** — Security: unauth + revoked-token rejected on both cloud endpoints.
 
 ### Phase P7 Definition of Done (exit criteria)
 - [ ] Public `cop_mcp_url` and `thief_mcp_url` are live and authenticated.

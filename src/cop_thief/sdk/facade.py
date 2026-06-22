@@ -74,8 +74,13 @@ class CopThiefSDK:
         self._loop = GameLoop(
             config, self._mcp, self._turn, random.Random(config.seed),
         )
-        self._state = GameState()
+        self._state = GameState(grid_size=config.grid_size)
         self._launcher: McpServerLauncher | None = None
+
+    @classmethod
+    def from_env(cls, **kwargs: object) -> CopThiefSDK:
+        """Build an SDK instance from ``CONFIG_PATH`` / ``config/config.yaml``."""
+        return cls(Config.from_env(), **kwargs)  # type: ignore[arg-type]
 
     def _run_async(self, coro: object) -> object:
         return asyncio.run(coro)  # type: ignore[arg-type]
@@ -91,11 +96,19 @@ class CopThiefSDK:
 
     def run_sub_game(self, index: int = 1) -> SubGameResult:
         """Run a single sub-game and return its result."""
-        return self._run_async(self._loop.run_sub_game(index))  # type: ignore[return-value]
+        result = self._run_async(self._loop.run_sub_game(index))
+        frames = self.get_replay_frames()
+        if frames:
+            self._state = frames[-1]
+        return result  # type: ignore[return-value]
 
     def get_state(self) -> GameState:
         """Return the latest cached game state snapshot for GUI rendering."""
         return self._state
+
+    def get_replay_frames(self) -> list[GameState]:
+        """Return visual replay frames from the most recent sub-game."""
+        return self._loop.snapshots
 
     async def _refresh_state(self) -> GameState:
         status = await self._mcp.game_status()
