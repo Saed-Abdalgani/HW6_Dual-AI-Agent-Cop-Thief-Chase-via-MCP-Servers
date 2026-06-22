@@ -29,6 +29,7 @@ dev = [
 cop-thief = "cop_thief.cli.main:main"
 cop-thief-gui = "cop_thief.gui.app:main"
 cop-thief-mcp = "cop_thief.mcp_servers.server:main"
+cop-thief-state = "cop_thief.mcp_servers.state_server:main"
 cop-thief-verify-cloud = "cop_thief.cli.verify_cloud:main"
 
 [tool.hatch.build.targets.wheel]
@@ -73,6 +74,9 @@ known-first-party = ["cop_thief"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = [
+    "live_cloud: optional live verification against deployed MCP URLs",
+]
 addopts = [
     "--cov=src/cop_thief",
     "--cov-report=term-missing",

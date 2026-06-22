@@ -1,5 +1,13 @@
 services:
   - type: web
+    name: cop-thief-state
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerCommand: uv run cop-thief-state
+    envVars:
+      - key: MCP_STATE_TOKEN
+        sync: false
+  - type: web
     name: cop-thief-cop-mcp
     env: docker
     dockerfilePath: ./Dockerfile
@@ -13,6 +21,14 @@ services:
       - key: MCP_THIEF_TOKEN
         sync: false
       - key: MCP_REVOKED_TOKENS
+        sync: false
+      - key: MCP_STATE_URL
+        sync: false
+      - key: MCP_STATE_TOKEN
+        sync: false
+      - key: MCP_COP_URL
+        sync: false
+      - key: MCP_THIEF_URL
         sync: false
   - type: web
     name: cop-thief-thief-mcp
@@ -28,4 +44,12 @@ services:
       - key: MCP_THIEF_TOKEN
         sync: false
       - key: MCP_REVOKED_TOKENS
+        sync: false
+      - key: MCP_STATE_URL
+        sync: false
+      - key: MCP_STATE_TOKEN
+        sync: false
+      - key: MCP_COP_URL
+        sync: false
+      - key: MCP_THIEF_URL
         sync: false

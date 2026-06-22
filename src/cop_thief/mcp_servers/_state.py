@@ -1,15 +1,15 @@
 """Helper module for state management in MCP servers.
 
 Manages loading, saving, and converting the JSON state to/from engine objects.
-Traces: T-P2-08.
+Traces: T-P2-08, T-P7-02, T-P7-03.
 """
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from cop_thief.constants import Outcome
+from cop_thief.mcp_servers._state_backend import get_state_backend, reset_state_backend
 from cop_thief.services.engine._turn_state import TurnState
 from cop_thief.services.engine.board import Board
 from cop_thief.services.engine.rules import RuleEngine
@@ -20,12 +20,10 @@ STATE_PATH = Path("data/mcp_state.json")
 
 def load_state() -> dict:
     """Load JSON game state, initializing if absent or corrupt."""
-    if STATE_PATH.exists():
-        try:
-            with open(STATE_PATH) as f:
-                return json.load(f)
-        except json.JSONDecodeError:
-            STATE_PATH.unlink(missing_ok=True)
+    backend = get_state_backend(STATE_PATH)
+    stored = backend.read()
+    if stored is not None:
+        return stored
     config = Config.from_env()
     state = {
         "cop_pos": [0, 0],
@@ -43,10 +41,14 @@ def load_state() -> dict:
 
 
 def save_state(state: dict) -> None:
-    """Save game state to JSON file."""
-    STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(STATE_PATH, "w") as f:
-        json.dump(state, f, indent=2)
+    """Save game state through the configured backend."""
+    get_state_backend(STATE_PATH).write(state)
+
+
+def clear_state_file() -> None:
+    """Remove local state and reset the backend cache."""
+    reset_state_backend()
+    STATE_PATH.unlink(missing_ok=True)
 
 
 def get_engine_objects(state: dict) -> tuple[Board, TurnState, RuleEngine]:

@@ -22,7 +22,7 @@ def main() -> None:
     """Run a full autonomous game (6 valid sub-games) with zero manual steps."""
     try:
         config = Config.from_env()
-        sdk = CopThiefSDK(config, use_direct_mcp=True)
+        sdk = CopThiefSDK(config)
         report = sdk.run_full_game()
         _log.info(
             "Game complete: %d sub-games, cop=%d thief=%d",

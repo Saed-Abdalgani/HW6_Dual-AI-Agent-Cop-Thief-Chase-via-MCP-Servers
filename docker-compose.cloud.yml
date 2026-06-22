@@ -1,0 +1,45 @@
+services:
+  state:
+    build: .
+    command: ["uv", "run", "cop-thief-state"]
+    environment:
+      MCP_STATE_TOKEN: ${MCP_STATE_TOKEN}
+      MCP_STATE_PORT: "8090"
+    ports:
+      - "8090:8090"
+
+  cop-mcp:
+    build: .
+    command: ["uv", "run", "cop-thief-mcp"]
+    environment:
+      SERVER_ROLE: cop
+      CONFIG_PATH: config/config.cloud.yaml
+      MCP_COP_TOKEN: ${MCP_COP_TOKEN}
+      MCP_THIEF_TOKEN: ${MCP_THIEF_TOKEN}
+      MCP_REVOKED_TOKENS: ${MCP_REVOKED_TOKENS:-}
+      MCP_STATE_URL: http://state:8090
+      MCP_STATE_TOKEN: ${MCP_STATE_TOKEN}
+      MCP_COP_URL: http://localhost:8001
+      MCP_THIEF_URL: http://localhost:8002
+    ports:
+      - "8001:8001"
+    depends_on:
+      - state
+
+  thief-mcp:
+    build: .
+    command: ["uv", "run", "cop-thief-mcp"]
+    environment:
+      SERVER_ROLE: thief
+      CONFIG_PATH: config/config.cloud.yaml
+      MCP_COP_TOKEN: ${MCP_COP_TOKEN}
+      MCP_THIEF_TOKEN: ${MCP_THIEF_TOKEN}
+      MCP_REVOKED_TOKENS: ${MCP_REVOKED_TOKENS:-}
+      MCP_STATE_URL: http://state:8090
+      MCP_STATE_TOKEN: ${MCP_STATE_TOKEN}
+      MCP_COP_URL: http://localhost:8001
+      MCP_THIEF_URL: http://localhost:8002
+    ports:
+      - "8002:8002"
+    depends_on:
+      - state

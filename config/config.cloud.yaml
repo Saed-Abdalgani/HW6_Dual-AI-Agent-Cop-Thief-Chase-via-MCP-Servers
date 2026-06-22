@@ -1,4 +1,4 @@
-# Cloud runtime config. Replace the MCP URLs with deployed HTTPS base URLs.
+# Cloud runtime config. Set MCP_COP_URL / MCP_THIEF_URL env vars after deploy.
 grid_size: [5, 5]
 max_moves: 25
 num_games: 6
@@ -18,8 +18,8 @@ llm:
   timeout_s: 30
   base_url: null
 mcp:
-  cop_url: "https://replace-with-cop-mcp.example.com"
-  thief_url: "https://replace-with-thief-mcp.example.com"
+  cop_url: "https://replace-with-cop-mcp.example.com"   # or MCP_COP_URL env
+  thief_url: "https://replace-with-thief-mcp.example.com"  # or MCP_THIEF_URL env
 gatekeeper:
   rate_limit_per_target: 3
   max_retries: 4

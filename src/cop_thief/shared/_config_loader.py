@@ -34,6 +34,18 @@ def load_yaml(path: str | Path) -> dict:
         return yaml.safe_load(fh) or {}
 
 
+def apply_env_overrides(data: dict) -> dict:
+    """Apply non-secret env overrides (e.g. public MCP URLs) to raw config data."""
+    mcp = dict(data.get("mcp") or {})
+    if cop_url := os.environ.get("MCP_COP_URL"):
+        mcp["cop_url"] = cop_url
+    if thief_url := os.environ.get("MCP_THIEF_URL"):
+        mcp["thief_url"] = thief_url
+    if mcp:
+        data["mcp"] = mcp
+    return data
+
+
 def load_secret(env_var: str, *, required: bool = True) -> str | None:
     """Return the value of *env_var*; raise if missing and *required*.
 

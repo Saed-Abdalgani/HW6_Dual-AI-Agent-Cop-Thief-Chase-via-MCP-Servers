@@ -12,6 +12,17 @@ import pytest
 # ---------------------------------------------------------------------------
 
 
+@pytest.fixture(autouse=True)
+def _reset_mcp_state_backend(monkeypatch: pytest.MonkeyPatch) -> object:
+    """Isolate MCP state backend cache between tests."""
+    from cop_thief.mcp_servers._state_backend import reset_state_backend
+
+    monkeypatch.delenv("MCP_STATE_URL", raising=False)
+    reset_state_backend()
+    yield
+    reset_state_backend()
+
+
 @pytest.fixture()
 def minimal_env(monkeypatch: pytest.MonkeyPatch) -> None:
     """Set the minimum required env vars so config loading doesn't fail fast."""

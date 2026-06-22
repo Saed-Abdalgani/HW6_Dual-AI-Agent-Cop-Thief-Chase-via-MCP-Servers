@@ -10,6 +10,7 @@ import random
 
 from cop_thief.mcp_servers import _state
 from cop_thief.sdk._facade_types import FullGameReport, GameState, HealthStatus
+from cop_thief.services.deployment.cloud import assert_hybrid_client_safe, resolve_mcp_wiring
 from cop_thief.services.engine._lifecycle_types import SubGameResult
 from cop_thief.services.nlp.transcript import TranscriptLogger
 from cop_thief.services.orchestrator._mcp_direct import DirectMcpBackend
@@ -34,8 +35,8 @@ class CopThiefSDK:
         self,
         config: Config,
         *,
-        use_direct_mcp: bool = True,
-        auto_launch_servers: bool = False,
+        use_direct_mcp: bool | None = None,
+        auto_launch_servers: bool | None = None,
         llm_caller: object | None = None,
         report_sender: ReportSender | None = None,
     ) -> None:
@@ -43,12 +44,18 @@ class CopThiefSDK:
 
         Args:
             config: Validated runtime configuration.
-            use_direct_mcp: When True, call MCP tools in-process (default for tests/CLI).
-            auto_launch_servers: Spawn MCP server subprocesses when not using direct MCP.
+            use_direct_mcp: In-process MCP tools; ``None`` auto-detects from config.
+            auto_launch_servers: Spawn local MCP subprocesses when remote URLs are local.
             llm_caller: Optional async callable(prompt) -> str for tests.
             report_sender: Optional report sender override for tests.
 
         """
+        assert_hybrid_client_safe(config)
+        direct, launch = resolve_mcp_wiring(config)
+        if use_direct_mcp is None:
+            use_direct_mcp = direct
+        if auto_launch_servers is None:
+            auto_launch_servers = launch
         self._config = config
         self._use_direct = use_direct_mcp
         self._auto_launch = auto_launch_servers
@@ -61,7 +68,7 @@ class CopThiefSDK:
         if thief_tok:
             default_store.register_token("thief", thief_tok)
         if use_direct_mcp:
-            _state.STATE_PATH.unlink(missing_ok=True)
+            _state.clear_state_file()
         backend = DirectMcpBackend(cop_tok, thief_tok) if use_direct_mcp else None
         self._mcp = McpClient(config, self._gk, cop_tok, thief_tok, backend=backend)
         self._llm = LlmClient(config, self._gk, llm_caller=llm_caller)  # type: ignore[arg-type]

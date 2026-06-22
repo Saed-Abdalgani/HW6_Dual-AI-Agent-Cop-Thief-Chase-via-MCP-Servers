@@ -9,7 +9,7 @@
 ## Verdict justification
 
 The codebase satisfies local development, testing, documentation, and submission engineering
-requirements. **Cloud MCP deployment (Phase P7)** remains blocked on operator credentials and live
+requirements. **Cloud MCP deployment (Phase P7)** is implemented; set live HTTPS URLs via env and run `cop-thief-verify-cloud`.
 public URLs; identity fields in `config/config.yaml` (`group_name`, `students`) still need team
 values before the final JSON report is submitted.
 

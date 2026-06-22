@@ -11,11 +11,16 @@ from cop_thief.shared.auth import default_store
 @pytest.fixture(autouse=True)
 def clean_state(tmp_path: object, monkeypatch: pytest.MonkeyPatch) -> None:
     """Redirect state file to a temporary file per test."""
+    from cop_thief.mcp_servers._state_backend import reset_state_backend
+
     test_state_file = tmp_path / "test_mcp_state.json"
     monkeypatch.setattr(_state, "STATE_PATH", test_state_file)
+    monkeypatch.delenv("MCP_STATE_PATH", raising=False)
+    reset_state_backend()
     if test_state_file.exists():
         test_state_file.unlink()
     yield
+    reset_state_backend()
     if test_state_file.exists():
         test_state_file.unlink()
 
