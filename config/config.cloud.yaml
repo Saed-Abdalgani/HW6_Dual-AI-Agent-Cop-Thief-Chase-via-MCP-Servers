@@ -33,6 +33,6 @@ nlp:
 report:
   group_name: "TBD"
   students: []
-  github_repo: "TBD"
+  github_repo: "https://github.com/Saed-Abdalgani/HW6_Dual-AI-Agent-Cop-Thief-Chase-via-MCP-Servers"
 timezone: "Asia/Jerusalem"
 seed: null

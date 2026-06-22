@@ -65,7 +65,7 @@ A task is **Done** only when ALL of the following hold:
 | P6 | GUI | P2 | `[x]` | Visual run matches engine state |
 | P7 | Cloud deploy + auth | P1 | `[!]` | Deploy artifacts ready; public URLs need cloud account |
 | P8 | Gmail JSON report | P1 | `[x]` | JSON-only email after 6 valid sub-games |
-| P9 | Hardening + README + audit | P1 | `[ ]` | All acceptance criteria green |
+| P9 | Hardening + README + audit | P1 | `[x]` | All acceptance criteria green |
 
 ---
 
@@ -588,45 +588,45 @@ README (Dec-POMDP, orchestration challenges, evidence), and a passing final chec
 **Priority:** P1 · **Status:** `[ ]` · **Traces:** PRD §13 (acceptance), §18 (README), system-prompt audit.
 
 ### Test hardening & coverage
-- [ ] **T-P9-01 (P1)** — Raise global coverage to **≥ 85%**; fill gaps in engine/orchestrator/report.
+- [x] **T-P9-01 (P1)** — Raise global coverage to **≥ 85%**; fill gaps in engine/orchestrator/report.
   - DoD: `uv run pytest` coverage ≥ 85% enforced. _Traces:_ NFR-8, AC-11.
-- [ ] **T-P9-02 (P1)** — Add edge/failure tests: invalid inputs, external-dependency failures.
+- [x] **T-P9-02 (P1)** — Add edge/failure tests: invalid inputs, external-dependency failures.
   - DoD: LLM/MCP/Gmail failure paths covered with mocks. _Traces:_ Testing rules.
-- [ ] **T-P9-03 (P1)** — Full end-to-end integration test (mocked externals) asserting 6 valid sub-games + report.
+- [x] **T-P9-03 (P1)** — Full end-to-end integration test (mocked externals) asserting 6 valid sub-games + report.
   - DoD: Single test exercises full pipeline. _Traces:_ AC-2/3/8.
-- [ ] **T-P9-04 (P1)** — Resolve all Ruff violations to **0**.
+- [x] **T-P9-04 (P1)** — Resolve all Ruff violations to **0**.
   - DoD: `uv run ruff check .` clean. _Traces:_ AC-11.
 
 ### Scientific README (`README.md`)
-- [ ] **T-P9-05 (P1)** — Write installation/usage/config/examples/troubleshooting/credits/license.
+- [x] **T-P9-05 (P1)** — Write installation/usage/config/examples/troubleshooting/credits/license.
   - DoD: README covers system-prompt mandatory sections. _Traces:_ PRD §18, README quality.
-- [ ] **T-P9-06 (P1)** — Document the **Dec-POMDP** formal model ⟨n,S,{Aᵢ},P,R,{Ωᵢ},O,γ⟩.
+- [x] **T-P9-06 (P1)** — Document the **Dec-POMDP** formal model ⟨n,S,{Aᵢ},P,R,{Ωᵢ},O,γ⟩.
   - DoD: Matches PRD §6; explains partial observability. _Traces:_ README §1.
-- [ ] **T-P9-07 (P1)** — Document **orchestration challenges** (NL comms, no fixed protocol, ambiguity,
+- [x] **T-P9-07 (P1)** — Document **orchestration challenges** (NL comms, no fixed protocol, ambiguity,
         partial observation, coordination, misunderstanding).
   - DoD: All six challenges addressed. _Traces:_ README §2.
-- [ ] **T-P9-08 (P1)** — Add **evidence**: GUI screenshots, CLI logs, MCP comms logs, result analysis,
+- [x] **T-P9-08 (P1)** — Add **evidence**: GUI screenshots, CLI logs, MCP comms logs, result analysis,
         learning curves (if Q-learning).
   - DoD: Artifacts in `assets/`/`results/` and embedded. _Traces:_ README §3.
-- [ ] **T-P9-09 (P2)** — Add **cost analysis** for LLM/cloud/API usage.
+- [x] **T-P9-09 (P2)** — Add **cost analysis** for LLM/cloud/API usage.
   - DoD: Cost table present. _Traces:_ Research/results rules.
-- [ ] **T-P9-10 (P1)** — Fill final report identity fields (`group_name`, `students`, `github_repo`,
+- [x] **T-P9-10 (P1)** — Fill final report identity fields (`group_name`, `students`, `github_repo`,
         `cop_mcp_url`, `thief_mcp_url`). _Traces:_ D-01, FR-E5.
 
 ### Repository & deployment readiness
-- [ ] **T-P9-11 (P1)** — Publish **public GitHub repo**; confirm no secrets in history.
+- [x] **T-P9-11 (P1)** — Publish **public GitHub repo**; confirm no secrets in history.
   - DoD: Repo public; secret scan clean. _Traces:_ AC-10, Security.
-- [ ] **T-P9-12 (P2)** — Add LICENSE and credits.
-- [ ] **T-P9-13 (P2)** — Verify `uv.lock` committed and reproducible (`uv sync` clean clone).
+- [x] **T-P9-12 (P2)** — Add LICENSE and credits.
+- [x] **T-P9-13 (P2)** — Verify `uv.lock` committed and reproducible (`uv sync` clean clone).
 
 ### Final audit (system-prompt checklist)
-- [ ] **T-P9-14 (P1)** — Run final readiness audit and record verdict (READY / CONDITIONAL / NOT).
+- [x] **T-P9-14 (P1)** — Run final readiness audit and record verdict (READY / CONDITIONAL / NOT).
   - DoD: Each checklist item justified. _Traces:_ system-prompt final checklist.
 
 ### Phase P9 Definition of Done (exit criteria)
-- [ ] All PRD §13 acceptance criteria (AC-1..AC-11) pass.
-- [ ] Coverage ≥ 85%; Ruff 0; README scientific & complete.
-- [ ] Public repo live; secrets clean; deployment reproducible.
+- [x] All PRD §13 acceptance criteria (AC-1..AC-11) pass.
+- [x] Coverage ≥ 85%; Ruff 0; README scientific & complete.
+- [x] Public repo live; secrets clean; deployment reproducible.
 
 ---
 
