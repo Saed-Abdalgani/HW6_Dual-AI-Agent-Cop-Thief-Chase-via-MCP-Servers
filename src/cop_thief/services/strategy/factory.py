@@ -10,6 +10,7 @@ from cop_thief.services.orchestrator.llm_client import LlmClient
 from cop_thief.services.strategy.base import Strategy
 from cop_thief.services.strategy.heuristic import HeuristicStrategy
 from cop_thief.services.strategy.llm_strategy import LlmStrategy
+from cop_thief.services.strategy.qlearning import QLearningStrategy
 from cop_thief.shared.config import Config
 
 
@@ -33,10 +34,9 @@ def create_strategy(config: Config, llm: LlmClient | None = None) -> Strategy:
             raise ValueError(msg)
         return LlmStrategy(llm)
     if name is StrategyName.QLEARNING:
-        msg = (
-            f"Strategy '{name}' is not implemented yet. "
-            "Use 'heuristic' or 'llm'."
+        return QLearningStrategy(
+            discount_factor=config.discount_gamma,
+            seed=config.seed,
         )
-        raise ValueError(msg)
     msg = f"Unknown strategy '{name}'."
     raise ValueError(msg)

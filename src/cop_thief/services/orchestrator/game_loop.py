@@ -126,7 +126,7 @@ class GameLoop:
             index=index,
             winner=winner,
             moves_used=status.get("move_count", 0),
-            barriers_used=0,
+            barriers_used=status.get("barriers_used", 0),
             score=score,
         )
 

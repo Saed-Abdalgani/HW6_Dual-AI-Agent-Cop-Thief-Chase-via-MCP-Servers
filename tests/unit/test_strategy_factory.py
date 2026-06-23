@@ -9,6 +9,7 @@ from cop_thief.services.orchestrator.llm_client import LlmClient
 from cop_thief.services.strategy.factory import create_strategy
 from cop_thief.services.strategy.heuristic import HeuristicStrategy
 from cop_thief.services.strategy.llm_strategy import LlmStrategy
+from cop_thief.services.strategy.qlearning import QLearningStrategy
 from cop_thief.shared.config import Config
 from cop_thief.shared.gatekeeper import Gatekeeper
 
@@ -30,14 +31,13 @@ def test_factory_selects_llm(valid_config_yaml: object, monkeypatch: pytest.Monk
     assert isinstance(create_strategy(cfg, llm), LlmStrategy)
 
 
-def test_factory_rejects_qlearning(
+def test_factory_selects_qlearning(
     valid_config_yaml: object,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("CONFIG_PATH", str(valid_config_yaml))
     cfg = Config.from_env().model_copy(update={"strategy": StrategyName.QLEARNING})
-    with pytest.raises(ValueError, match="not implemented"):
-        create_strategy(cfg)
+    assert isinstance(create_strategy(cfg), QLearningStrategy)
 
 
 def test_factory_llm_requires_client(

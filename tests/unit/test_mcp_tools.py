@@ -97,8 +97,17 @@ class TestMcpTools:
         assert r_bad["legal"] is False
 
     def test_game_status_and_scores(self, auth_tokens: tuple[str, str]) -> None:
-        cop_tok, _ = auth_tokens
+        cop_tok, thief_tok = auth_tokens
         status = tools.game_status(cop_tok)
         assert status["over"] is False
         assert status["winner"] == "in_progress"
         assert status["scores"] == {"cop": 0, "thief": 0}  # starting/mid-game scores
+        assert status["barriers_used"] == 0
+        assert status["barriers"] == []
+
+        assert tools.apply_action("thief", "stay", thief_tok)["legal"] is True
+        assert tools.apply_action("cop", "place_barrier", cop_tok)["legal"] is True
+
+        status = tools.game_status(cop_tok)
+        assert status["barriers_used"] == 1
+        assert status["barriers"] == [[0, 0]]
