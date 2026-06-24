@@ -37,6 +37,14 @@ class LlmConfig(BaseModel):
 class McpConfig(BaseModel):
     """URLs for the two MCP servers (non-secret; tokens come from env)."""
 
+    mode: Literal["direct", "http", "auto"] = Field(
+        "direct",
+        description="MCP wiring: direct in-process, HTTP/SSE, or auto-detect.",
+    )
+    auto_launch: bool = Field(
+        True,
+        description="Auto-start localhost MCP servers when mode is http.",
+    )
     cop_url: str = Field("http://localhost:8001", min_length=1)
     thief_url: str = Field("http://localhost:8002", min_length=1)
 
@@ -65,6 +73,13 @@ class NlpConfig(BaseModel):
     transcript_dir: str = Field("results", min_length=1)
 
 
+class QLearningConfig(BaseModel):
+    """Q-learning strategy hyperparameters."""
+
+    learning_rate: float = Field(0.1, ge=0.0, le=1.0)
+    epsilon: float = Field(0.1, ge=0.0, le=1.0)
+
+
 class ReportConfig(BaseModel):
     """Final JSON report identity fields."""
 
@@ -80,6 +95,7 @@ __all__ = [
     "LlmConfig",
     "McpConfig",
     "NlpConfig",
+    "QLearningConfig",
     "ReportConfig",
     "ScoringConfig",
     "StartMode",

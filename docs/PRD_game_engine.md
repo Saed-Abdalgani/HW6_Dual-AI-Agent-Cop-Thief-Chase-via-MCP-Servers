@@ -104,7 +104,13 @@ Diagonal moves do **not** bypass barriers — only the target cell is checked
 - Only the **cop** may place barriers via the `place_barrier` action.
 - When the cop places a barrier:
   - The cop's **current cell** becomes a blocked barrier cell.
-  - The cop does **not move** this turn.
+  - The cop is immediately relocated to the first legal adjacent cell in
+    deterministic movement order, preserving the invariant that no agent
+    occupies a barrier cell.
+  - If no legal adjacent relocation is available, the action is rejected and
+    no barrier is placed.
+  - Placing a barrier on an already blocked cell is rejected and does not
+    consume budget.
   - The barrier count for this sub-game is incremented.
 
 ### 5.2 Limits
@@ -209,7 +215,15 @@ These must hold at all times during a sub-game:
 
 ---
 
-## 12. Edge Cases
+## 12. Engine Authority
+
+The engine is the single source of truth for barrier legality, movement,
+capture, scoring, and lifecycle state. MCP tools must route action requests
+through `RuleEngine.apply_action()` and persist only the resulting engine state.
+
+---
+
+## 13. Edge Cases
 
 | Case | Resolution |
 |------|-----------|
@@ -217,6 +231,8 @@ These must hold at all times during a sub-game:
 | Agent tries to move into barrier | Rejected; agent stays; logged |
 | Thief tries `place_barrier` | Rejected; thief stays; logged |
 | Cop tries 6th barrier | Rejected; cop stays; logged |
+| Cop tries duplicate barrier | Rejected; budget unchanged; logged |
+| Cop has no relocation after barrier | Rejected; no barrier placed; logged |
 | Capture on thief's move | Sub-game ends immediately (cop wins) |
 | Capture on cop's move | Sub-game ends immediately (cop wins) |
 | `max_moves` reached exactly | Thief wins |

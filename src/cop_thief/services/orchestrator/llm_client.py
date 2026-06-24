@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 from collections.abc import Awaitable, Callable
 
+from cop_thief.services.nlp.encoder import describe_position, sanitize_message
 from cop_thief.services.orchestrator._llm_http import call_llm_api, load_api_key
 from cop_thief.services.orchestrator._llm_parse import parse_llm_json
 from cop_thief.services.orchestrator._types import LlmDecision, Observation
@@ -38,10 +39,13 @@ class LlmClient:
 
     def _build_prompt(self, obs: Observation) -> str:
         schema = json.dumps({"action": "<action>", "nl_message": "<text>"})
+        own_region = describe_position(obs.own_pos, obs.grid_size)
+        opp_region = describe_position(obs.opp_estimate, obs.grid_size)
         return (
             f"You are the {obs.agent.value} in a {obs.grid_size[0]}x{obs.grid_size[1]} chase game. "
-            f"Your position: {obs.own_pos}. Opponent estimate: {obs.opp_estimate}. "
+            f"Your coarse region: {own_region}. Opponent estimate region: {opp_region}. "
             f"Moves so far: {obs.move_count}. Last message: {obs.last_message!r}. "
+            f"Barrier budget used: {obs.barriers_used} of {obs.max_barriers}. "
             "Your nl_message must be natural language with coarse hints only; "
             "do not include literal row/column coordinates. "
             f"Reply with JSON only matching: {schema}"
@@ -68,7 +72,10 @@ class LlmClient:
         try:
             raw = await self._call_provider(self._build_prompt(obs))
             decision = parse_llm_json(raw)
-            return decision
+            return LlmDecision(
+                action=decision.action,
+                nl_message=sanitize_message(decision.nl_message),
+            )
         except Exception as exc:  # noqa: BLE001
             _log.warning("LLM decision failed (%r); using heuristic fallback.", exc)
             action = choose_heuristic_action(obs)

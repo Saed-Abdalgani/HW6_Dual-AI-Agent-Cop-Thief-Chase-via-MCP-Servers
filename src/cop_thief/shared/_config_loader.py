@@ -48,6 +48,10 @@ def load_yaml(path: str | Path) -> dict:
 def apply_env_overrides(data: dict) -> dict:
     """Apply non-secret env overrides (e.g. public MCP URLs) to raw config data."""
     mcp = dict(data.get("mcp") or {})
+    if mode := os.environ.get("MCP_MODE"):
+        mcp["mode"] = mode
+    if auto_launch := os.environ.get("MCP_AUTO_LAUNCH"):
+        mcp["auto_launch"] = auto_launch.lower() in {"1", "true", "yes", "on"}
     if cop_url := os.environ.get("MCP_COP_URL"):
         mcp["cop_url"] = cop_url
     if thief_url := os.environ.get("MCP_THIEF_URL"):

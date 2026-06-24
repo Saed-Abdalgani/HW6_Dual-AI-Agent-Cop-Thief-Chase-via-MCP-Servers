@@ -12,6 +12,7 @@ from __future__ import annotations
 import sys
 
 from cop_thief.sdk.facade import CopThiefSDK
+from cop_thief.services.deployment.cloud import resolve_mcp_wiring
 from cop_thief.shared.config import Config
 from cop_thief.shared.logging import get_logger
 
@@ -22,6 +23,10 @@ def main() -> None:
     """Run a full autonomous game (6 valid sub-games) with zero manual steps."""
     try:
         config = Config.from_env()
+        direct, launch = resolve_mcp_wiring(config)
+        path = "direct in-process" if direct else "HTTP/SSE"
+        launch_msg = ", auto-launching local servers" if launch else ""
+        print(f"MCP path: {path}{launch_msg}")  # noqa: T201
         sdk = CopThiefSDK(config)
         report = sdk.run_full_game()
         _log.info(

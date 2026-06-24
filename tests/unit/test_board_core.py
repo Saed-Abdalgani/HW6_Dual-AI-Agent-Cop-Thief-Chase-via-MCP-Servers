@@ -82,6 +82,15 @@ def test_place_barrier_increments_counter() -> None:
     assert b.barriers_used == 2
 
 
+def test_place_barrier_duplicate_does_not_increment_counter() -> None:
+    """Duplicate barrier placement leaves the set and counter unchanged."""
+    b = Board(rows=5, cols=5)
+    assert b.place_barrier((1, 1)) is True
+    assert b.place_barrier((1, 1)) is False
+    assert b.barriers == frozenset({(1, 1)})
+    assert b.barriers_used == 1
+
+
 def test_barrier_does_not_block_other_cells() -> None:
     """Placing a barrier at one cell doesn't block adjacent cells."""
     b = Board(rows=5, cols=5)

@@ -14,6 +14,13 @@ def test_build_board_view_uses_configured_grid_size() -> None:
     assert len(view.cells) == 35
 
 
+def test_build_board_view_idle_state_hides_default_agents() -> None:
+    state = GameState(grid_size=(5, 5), idle=True)
+    view = build_board_view(state)
+    assert "Press Run" in view.status
+    assert all(cell.label == "" for cell in view.cells)
+
+
 def test_build_board_view_marks_agents_and_barriers() -> None:
     state = GameState(
         grid_size=(5, 5),
@@ -35,6 +42,13 @@ def test_build_board_view_marks_capture_cell() -> None:
     assert cell.fill == PALETTE["both"]
 
 
+def test_build_board_view_marks_cop_on_barrier_cell() -> None:
+    state = GameState(grid_size=(5, 5), cop_pos=(2, 2), thief_pos=(4, 4), barriers=[(2, 2)])
+    cell = next(c for c in build_board_view(state).cells if (c.row, c.col) == (2, 2))
+    assert cell.label == "C+B"
+    assert cell.fill == PALETTE["cop"]
+
+
 def test_build_board_view_status_score_and_message() -> None:
     state = GameState(
         over=True,
@@ -45,6 +59,7 @@ def test_build_board_view_status_score_and_message() -> None:
     )
     view = build_board_view(state)
     assert "Cop captured" in view.status
+    assert "Barriers 0/5" in view.status
     assert view.score == "Cop 20 | Thief 5"
     assert "east" in view.message
 

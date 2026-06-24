@@ -11,6 +11,7 @@ from __future__ import annotations
 import logging
 
 from cop_thief.constants import COP_ACTIONS, MOVE_DELTAS, THIEF_ACTIONS, Action, Agent, Outcome
+from cop_thief.services.engine._barrier_relocation import relocation_after_barrier
 from cop_thief.services.engine._move_result import MoveResult
 from cop_thief.services.engine._turn_state import TurnState
 from cop_thief.services.engine.board import Board
@@ -94,19 +95,33 @@ class RuleEngine:
             logger.warning("Rejected place_barrier for %s: %s", agent, reason)
             return MoveResult(legal=False, new_pos=current_pos, rejection_reason=reason)
 
+        if board.is_blocked(current_pos):
+            reason = f"Barrier already exists at {current_pos}."
+            logger.warning("Rejected place_barrier for cop: %s", reason)
+            return MoveResult(legal=False, new_pos=current_pos, rejection_reason=reason)
+
         if board.barriers_used >= self.max_barriers:
             reason = f"Barrier budget exhausted ({board.barriers_used}/{self.max_barriers})."
             logger.warning("Rejected place_barrier for cop: %s", reason)
             return MoveResult(legal=False, new_pos=current_pos, rejection_reason=reason)
 
+        relocation = relocation_after_barrier(board, current_pos)
+        if relocation is None:
+            reason = f"No legal relocation after placing barrier at {current_pos}."
+            logger.warning("Rejected place_barrier for cop: %s", reason)
+            return MoveResult(legal=False, new_pos=current_pos, rejection_reason=reason)
+
         board.place_barrier(current_pos)
+        # PRD invariant: no agent may occupy a barrier cell after placement.
+        board.set_pos(agent, relocation)
         logger.debug(
-            "Cop placed barrier at %s (%d/%d).",
+            "Cop placed barrier at %s and relocated to %s (%d/%d).",
             current_pos,
+            relocation,
             board.barriers_used,
             self.max_barriers,
         )
-        return MoveResult(legal=True, new_pos=current_pos, barrier_placed=True)
+        return MoveResult(legal=True, new_pos=relocation, barrier_placed=True)
 
     def _handle_movement(
         self, board: Board, agent: Agent, action: Action, current_pos: tuple[int, int]

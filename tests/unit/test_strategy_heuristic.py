@@ -15,6 +15,7 @@ def _obs(
     barriers_used: int = 0,
     max_barriers: int = 5,
     barriers: frozenset[tuple[int, int]] = frozenset(),
+    grid_size: tuple[int, int] = (5, 5),
 ) -> Observation:
     return Observation(
         agent=agent,
@@ -23,7 +24,7 @@ def _obs(
         barriers=barriers,
         barriers_used=barriers_used,
         max_barriers=max_barriers,
-        grid_size=(5, 5),
+        grid_size=grid_size,
         move_count=0,
     )
 
@@ -55,6 +56,21 @@ def test_cop_places_barrier_when_adjacent_and_budget() -> None:
 def test_barrier_blocked_when_budget_exhausted() -> None:
     action = choose_heuristic_action(
         _obs(Agent.COP, (1, 0), (0, 0), barriers_used=5, max_barriers=5),
+    )
+    assert action is not Action.PLACE_BARRIER
+
+
+def test_cop_does_not_place_duplicate_barrier() -> None:
+    action = choose_heuristic_action(
+        _obs(Agent.COP, (1, 0), (0, 0), barriers=frozenset({(1, 0)})),
+    )
+    assert action is not Action.PLACE_BARRIER
+
+
+def test_cop_skips_barrier_when_no_relocation_candidate() -> None:
+    barriers = frozenset({(0, 1), (1, 0), (1, 1)})
+    action = choose_heuristic_action(
+        _obs(Agent.COP, (0, 0), (0, 1), barriers=barriers, grid_size=(2, 2)),
     )
     assert action is not Action.PLACE_BARRIER
 

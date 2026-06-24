@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from cop_thief.constants import COP_ACTIONS, MOVE_DELTAS, THIEF_ACTIONS, Action, Agent
 from cop_thief.services.orchestrator._types import Observation
+from cop_thief.services.strategy._barrier_policy import can_place_barrier
 from cop_thief.services.strategy.base import Strategy, StrategyDecision
 
 
@@ -45,7 +46,7 @@ def choose_heuristic_action(obs: Observation) -> Action:
 
     if (
         obs.agent is Agent.COP
-        and obs.barriers_used < obs.max_barriers
+        and can_place_barrier(obs)
         and _manhattan(obs.own_pos, opp) <= 1
     ):
         return Action.PLACE_BARRIER
@@ -61,8 +62,7 @@ class HeuristicStrategy(Strategy):
     async def decide(self, obs: Observation) -> StrategyDecision:
         """Return Manhattan-based action and a short NL taunt."""
         action = choose_heuristic_action(obs)
-        msg = "Closing in." if obs.agent is Agent.COP else "Slipping away."
-        return StrategyDecision(action=action, nl_message=msg)
+        return StrategyDecision(action=action, nl_message="")
 
     def choose(self, obs: Observation) -> Action:
         """Return an action synchronously for fallback paths."""

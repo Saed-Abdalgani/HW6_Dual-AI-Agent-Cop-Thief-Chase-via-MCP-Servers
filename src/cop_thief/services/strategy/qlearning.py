@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 
 from cop_thief.constants import COP_ACTIONS, MOVE_DELTAS, THIEF_ACTIONS, Action, Agent
 from cop_thief.services.orchestrator._types import Observation
+from cop_thief.services.strategy._barrier_policy import can_place_barrier
 from cop_thief.services.strategy.base import Strategy, StrategyDecision
 
 StateKey = tuple[str, int, int, int, int, int]
@@ -38,7 +39,7 @@ def _legal_actions(obs: Observation) -> list[Action]:
     rows, cols = obs.grid_size
     for action in actions:
         if action is Action.PLACE_BARRIER:
-            if obs.agent is Agent.COP and obs.barriers_used < obs.max_barriers:
+            if can_place_barrier(obs):
                 legal.append(action)
             continue
         tgt = _target(obs, action)

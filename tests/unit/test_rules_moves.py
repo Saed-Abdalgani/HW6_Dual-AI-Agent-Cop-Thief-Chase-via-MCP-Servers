@@ -52,6 +52,32 @@ def test_cop_directional_moves(
     assert b.cop_pos == expected
 
 
+@pytest.mark.parametrize(
+    ("action", "start", "expected"),
+    [
+        (Action.UP, (2, 2), (1, 2)),
+        (Action.DOWN, (2, 2), (3, 2)),
+        (Action.LEFT, (2, 2), (2, 1)),
+        (Action.RIGHT, (2, 2), (2, 3)),
+        (Action.UP_LEFT, (2, 2), (1, 1)),
+        (Action.UP_RIGHT, (2, 2), (1, 3)),
+        (Action.DOWN_LEFT, (2, 2), (3, 1)),
+        (Action.DOWN_RIGHT, (2, 2), (3, 3)),
+        (Action.STAY, (2, 2), (2, 2)),
+    ],
+)
+def test_thief_directional_moves(
+    action: Action, start: tuple[int, int], expected: tuple[int, int]
+) -> None:
+    """Thief movement mirrors cop movement for all non-barrier actions."""
+    b = make_board(cop=(0, 0), thief=start)
+    rules = make_rules()
+    result = rules.apply_action(b, Agent.THIEF, action)
+    assert result.legal is True
+    assert result.new_pos == expected
+    assert b.thief_pos == expected
+
+
 def test_thief_stay_move() -> None:
     """Thief can stay in place."""
     b = make_board(cop=(0, 0), thief=(2, 2))

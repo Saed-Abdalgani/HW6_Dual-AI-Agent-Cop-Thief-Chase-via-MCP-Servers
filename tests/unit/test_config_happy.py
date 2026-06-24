@@ -46,10 +46,20 @@ class TestConfigHappyPath:
         cfg = Config.from_yaml(valid_config_yaml)
         assert cfg.llm.provider == "openai"
 
+    def test_qlearning_values(self, valid_config_yaml: Path) -> None:
+        cfg = Config.from_yaml(valid_config_yaml)
+        assert cfg.qlearning.learning_rate == 0.1
+        assert cfg.qlearning.epsilon == 0.1
+
     def test_mcp_urls(self, valid_config_yaml: Path) -> None:
         cfg = Config.from_yaml(valid_config_yaml)
         assert cfg.mcp.cop_url == "http://localhost:8001"
         assert cfg.mcp.thief_url == "http://localhost:8002"
+
+    def test_mcp_mode(self, valid_config_yaml: Path) -> None:
+        cfg = Config.from_yaml(valid_config_yaml)
+        assert cfg.mcp.mode == "direct"
+        assert cfg.mcp.auto_launch is True
 
     def test_gatekeeper_queue_size(self, valid_config_yaml: Path) -> None:
         cfg = Config.from_yaml(valid_config_yaml)

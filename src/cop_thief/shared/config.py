@@ -30,6 +30,7 @@ from cop_thief.shared._config_schemas import (
     LlmConfig,
     McpConfig,
     NlpConfig,
+    QLearningConfig,
     ReportConfig,
     ScoringConfig,
 )
@@ -41,6 +42,7 @@ __all__ = [
     "LlmConfig",
     "McpConfig",
     "NlpConfig",
+    "QLearningConfig",
     "ReportConfig",
     "ScoringConfig",
 ]
@@ -75,6 +77,7 @@ class Config(BaseModel):
     gatekeeper: GatekeeperConfig = Field(default_factory=GatekeeperConfig)
     email: EmailConfig
     nlp: NlpConfig = Field(default_factory=NlpConfig)
+    qlearning: QLearningConfig = Field(default_factory=QLearningConfig)
     report: ReportConfig = Field(default_factory=ReportConfig)
 
     # Misc

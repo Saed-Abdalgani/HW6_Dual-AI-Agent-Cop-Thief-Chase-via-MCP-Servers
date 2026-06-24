@@ -28,12 +28,19 @@ strategy: heuristic     # "heuristic" | "qlearning" | "llm" — chosen strategy
 # ── LLM configuration ────────────────────────────────────────────────────────
 llm:
   provider: openai      # "openai" | "anthropic" | "gemini" | "ollama"
-  model: gpt-4o-mini    # Model name for the chosen provider
+  model: gpt-4o-mini    # OpenRouter example: openai/gpt-4o-mini
   timeout_s: 30         # Per-call timeout in seconds
-  base_url: null        # Optional: override base URL (e.g. for Ollama localhost)
+  base_url: null        # e.g. https://openrouter.ai/api/v1 or Ollama localhost
+
+# ── Q-learning configuration ────────────────────────────────────────────────
+qlearning:
+  learning_rate: 0.1    # Bellman update step size
+  epsilon: 0.1          # Exploration probability; discount uses discount_gamma
 
 # ── MCP server URLs ──────────────────────────────────────────────────────────
 mcp:
+  mode: direct                         # "direct" | "http" | "auto"
+  auto_launch: true                    # Start local servers when mode=http
   cop_url: "http://localhost:8001"    # Cop MCP server URL (local or cloud)
   thief_url: "http://localhost:8002"  # Thief MCP server URL (local or cloud)
 
@@ -55,7 +62,7 @@ nlp:
 
 # ── Final report identity ────────────────────────────────────────────────────
 report:
-  group_name: "TBD"
+  group_name: "Mohamed-Saed"
   students: ["Mohamed", "Saed"]
   github_repo: "https://github.com/Saed-Abdalgani/HW6_Dual-AI-Agent-Cop-Thief-Chase-via-MCP-Servers"
 

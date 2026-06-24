@@ -22,13 +22,7 @@ from cop_thief.services.engine._board_helpers import (
 
 @dataclass
 class Board:
-    """Grid, positions, and barrier state for one sub-game.
-
-    Args:
-        rows: Number of rows (from ``config.grid_size[0]``).
-        cols: Number of columns (from ``config.grid_size[1]``).
-
-    """
+    """Grid, positions, and barrier state for one sub-game."""
 
     rows: int
     cols: int
@@ -44,111 +38,51 @@ class Board:
             msg = f"Grid dimensions must be >= 2×2; got {self.rows}×{self.cols}."
             raise ValueError(msg)
 
-    # ------------------------------------------------------------------
-    # In-bounds / barrier helpers (T-P1-03, T-P1-04)
-    # ------------------------------------------------------------------
-
     def in_bounds(self, pos: tuple[int, int]) -> bool:
-        """Return True iff *pos* is within the grid.
-
-        Args:
-            pos: ``(row, col)`` to test.
-
-        Returns:
-            ``True`` when the cell is inside the grid boundaries.
-
-        """
+        """Return True iff *pos* is within the grid."""
         return in_bounds(self.rows, self.cols, pos)
 
     def is_blocked(self, pos: tuple[int, int]) -> bool:
-        """Return True iff *pos* is a barrier cell.
-
-        Args:
-            pos: ``(row, col)`` to test.
-
-        Returns:
-            ``True`` when *pos* is in the barrier set.
-
-        """
+        """Return True iff *pos* is a barrier cell."""
         return pos in self.barriers
 
     def is_legal_cell(self, pos: tuple[int, int]) -> bool:
-        """Return True iff *pos* is in-bounds and not blocked.
-
-        Args:
-            pos: ``(row, col)`` to test.
-
-        Returns:
-            ``True`` when the cell is both in-bounds and free.
-
-        """
+        """Return True iff *pos* is in-bounds and not blocked."""
         return self.in_bounds(pos) and not self.is_blocked(pos)
 
     def all_free_cells(self) -> list[tuple[int, int]]:
-        """Return all in-bounds, non-barrier cells.
-
-        Returns:
-            Sorted list of ``(row, col)`` tuples.
-
-        """
+        """Return all in-bounds, non-barrier cells."""
         return all_free_cells(self.rows, self.cols, self.barriers)
 
-    # ------------------------------------------------------------------
-    # Barrier placement (T-P1-04)
-    # ------------------------------------------------------------------
-
-    def place_barrier(self, pos: tuple[int, int]) -> None:
+    def place_barrier(self, pos: tuple[int, int]) -> bool:
         """Add *pos* to the barrier set and increment the counter.
 
         Args:
             pos: ``(row, col)`` of the cell to block.
 
+        Returns:
+            ``True`` when a new barrier was added, ``False`` for duplicates.
+
         """
+        if pos in self.barriers:
+            return False
         self.barriers = self.barriers | frozenset([pos])
         self.barriers_used += 1
-
-    # ------------------------------------------------------------------
-    # Agent-position helpers
-    # ------------------------------------------------------------------
+        return True
 
     def get_pos(self, agent: Agent) -> tuple[int, int]:
-        """Return the current position of *agent*.
-
-        Args:
-            agent: The agent whose position to retrieve.
-
-        Returns:
-            ``(row, col)`` of the agent.
-
-        """
+        """Return the current position of *agent*."""
         return self.cop_pos if agent is Agent.COP else self.thief_pos
 
     def set_pos(self, agent: Agent, pos: tuple[int, int]) -> None:
-        """Update the position of *agent* to *pos*.
-
-        Args:
-            agent: The agent to move.
-            pos: New ``(row, col)`` position.
-
-        """
+        """Update the position of *agent* to *pos*."""
         if agent is Agent.COP:
             self.cop_pos = pos
         else:
             self.thief_pos = pos
 
-    # ------------------------------------------------------------------
-    # Start-position generation (T-P1-05)
-    # ------------------------------------------------------------------
-
     def reset(self, start_mode: StartMode, rng: random.Random, max_barriers: int) -> None:  # noqa: ARG002
-        """Reset barriers and place agents for a new sub-game.
-
-        Args:
-            start_mode: ``RANDOM`` or ``STRATEGY`` placement.
-            rng: Seeded :class:`random.Random` for determinism.
-            max_barriers: Unused here; kept for caller API consistency.
-
-        """
+        """Reset barriers and place agents for a new sub-game."""
         self.barriers = frozenset()
         self.barriers_used = 0
         self.cop_pos, self.thief_pos = choose_start_positions(

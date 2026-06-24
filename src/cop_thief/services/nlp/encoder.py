@@ -36,6 +36,11 @@ def sanitize_message(text: str) -> str:
     return " ".join(_COORD_RE.sub("nearby", text or "").split()).strip()
 
 
+def describe_position(pos: tuple[int, int], grid_size: tuple[int, int]) -> str:
+    """Return a coordinate-free region description for a grid position."""
+    return _region_phrase(pos, grid_size)
+
+
 def encode_message(
     obs: Observation,
     action: Action,

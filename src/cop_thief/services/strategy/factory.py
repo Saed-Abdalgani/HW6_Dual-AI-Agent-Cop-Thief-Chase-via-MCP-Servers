@@ -35,7 +35,9 @@ def create_strategy(config: Config, llm: LlmClient | None = None) -> Strategy:
         return LlmStrategy(llm)
     if name is StrategyName.QLEARNING:
         return QLearningStrategy(
+            learning_rate=config.qlearning.learning_rate,
             discount_factor=config.discount_gamma,
+            epsilon=config.qlearning.epsilon,
             seed=config.seed,
         )
     msg = f"Unknown strategy '{name}'."

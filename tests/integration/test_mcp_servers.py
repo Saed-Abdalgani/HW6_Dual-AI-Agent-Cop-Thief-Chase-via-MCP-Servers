@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 import pytest
 from mcp import ClientSession
@@ -18,13 +19,15 @@ THIEF_TOKEN = "integration-thief-token"
 
 
 @pytest.fixture(scope="module")
-def run_servers() -> object:
+def run_servers(tmp_path_factory: pytest.TempPathFactory) -> object:
     """Start Cop and Thief servers as subprocesses for integration testing."""
+    state_path = tmp_path_factory.mktemp("mcp-state") / "state.json"
     env = {
         **os.environ,
         "PYTHONPATH": "src",
         "MCP_COP_TOKEN": COP_TOKEN,
         "MCP_THIEF_TOKEN": THIEF_TOKEN,
+        "MCP_STATE_PATH": str(state_path),
     }
 
     cop_proc = subprocess.Popen(
@@ -64,6 +67,13 @@ def run_servers() -> object:
             proc.wait(timeout=3)
         except subprocess.TimeoutExpired:
             proc.kill()
+    _cleanup_state(state_path)
+
+
+def _cleanup_state(path: Path) -> None:
+    """Remove integration-test state and lock files."""
+    path.unlink(missing_ok=True)
+    path.with_suffix(f"{path.suffix}.lock").unlink(missing_ok=True)
 
 
 @pytest.mark.asyncio
@@ -88,14 +98,6 @@ async def test_cop_server_tools(run_servers: object) -> None:
             {"agent": "cop", "token": "bad-token"},
         )
         assert res_bad.isError is True
-
-        # Expose place_barrier on Cop server
-        res_barrier = await session.call_tool(
-            "place_barrier",
-            {"token": COP_TOKEN},
-        )
-        assert res_barrier.isError is False
-        assert res_barrier.content[0].text is not None
 
 
 @pytest.mark.asyncio

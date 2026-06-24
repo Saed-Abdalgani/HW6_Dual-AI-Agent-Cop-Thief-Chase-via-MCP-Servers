@@ -43,6 +43,15 @@ def test_score_totals_accumulation() -> None:
     assert totals.sub_game_count == 2
 
 
+def test_prd_role_balanced_six_game_score_bounds() -> None:
+    """Document PRD group bounds for a 3-cop/3-thief role-balanced match."""
+    config = ScoringConfig()
+    group_max = (3 * config.cop_win) + (3 * config.thief_win)
+    thief_escape_ceiling = 6 * config.thief_win
+    assert group_max == 90  # noqa: PLR2004
+    assert thief_escape_ceiling == 60  # noqa: PLR2004
+
+
 def test_calculate_score_cop_win() -> None:
     """calculate_score returns correct scores for a cop win."""
     config = ScoringConfig(cop_win=20, thief_win=10, cop_loss=5, thief_loss=3)

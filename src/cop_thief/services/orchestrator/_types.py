@@ -56,9 +56,11 @@ class GameState:
     barriers: list[tuple[int, int]] = field(default_factory=list)
     move_count: int = 0
     barriers_used: int = 0
+    max_barriers: int = 5
     over: bool = False
     winner: str | None = None
     scores: dict[str, int] = field(default_factory=lambda: {"cop": 0, "thief": 0})
     sub_game_index: int = 0
     latest_message: str = ""
     grid_size: tuple[int, int] = (5, 5)
+    idle: bool = False

@@ -50,6 +50,9 @@ class FakeVar:
     def set(self, value: str) -> None:
         self.value = value
 
+    def get(self) -> object:
+        return self.value
+
 
 class FakeRoot:
     def title(self, text: str) -> None:
@@ -78,25 +81,36 @@ class FakeSDK:
     def get_state(self) -> GameState:
         return self.frames[0]
 
-    def run_sub_game(self):
+    def run_sub_game(self, on_frame=None):
+        if on_frame:
+            for frame in self.frames:
+                on_frame(frame)
         return SimpleNamespace(winner=SimpleNamespace(value="cop_win"))
+
+    def run_full_game(self, on_frame=None):
+        if on_frame:
+            for frame in self.frames:
+                on_frame(frame)
+        return SimpleNamespace(sub_games_played=6)
 
     def get_replay_frames(self) -> list[GameState]:
         return self.frames
 
 
 def test_gui_shell_runs_headless(monkeypatch, tmp_path) -> None:
-    from cop_thief.gui import app
+    from cop_thief.gui import _shell, app
 
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(app.tk, "Canvas", FakeCanvas)
-    monkeypatch.setattr(app.tk, "Text", FakeText)
+    monkeypatch.setattr(_shell.tk, "Canvas", FakeCanvas)
+    monkeypatch.setattr(_shell.tk, "Text", FakeText)
     monkeypatch.setattr(app.tk, "StringVar", FakeVar)
-    monkeypatch.setattr(app.ttk, "Frame", FakeWidget)
-    monkeypatch.setattr(app.ttk, "Label", FakeWidget)
-    monkeypatch.setattr(app.ttk, "Button", FakeWidget)
+    monkeypatch.setattr(app.tk, "IntVar", FakeVar)
+    monkeypatch.setattr(_shell.ttk, "Scale", FakeWidget)
+    monkeypatch.setattr(_shell.ttk, "Frame", FakeWidget)
+    monkeypatch.setattr(_shell.ttk, "Label", FakeWidget)
+    monkeypatch.setattr(_shell.ttk, "Button", FakeWidget)
     gui = app.CopThiefGui(FakeRoot(), FakeSDK())
-    gui._run_worker()
+    gui._run_worker(False)
     gui.step()
     gui.play()
     gui.capture()

@@ -1,4 +1,5 @@
 # Cloud runtime config. Set MCP_COP_URL / MCP_THIEF_URL env vars after deploy.
+# Cloud runs must use HTTP/SSE MCP mode; direct mode is local-only.
 grid_size: [5, 5]
 max_moves: 25
 num_games: 6
@@ -17,7 +18,12 @@ llm:
   model: gpt-4o-mini
   timeout_s: 30
   base_url: null
+qlearning:
+  learning_rate: 0.1
+  epsilon: 0.1
 mcp:
+  mode: http
+  auto_launch: false
   cop_url: "https://replace-with-cop-mcp.example.com"   # or MCP_COP_URL env
   thief_url: "https://replace-with-thief-mcp.example.com"  # or MCP_THIEF_URL env
 gatekeeper:
@@ -31,8 +37,8 @@ nlp:
   tone: balanced
   transcript_dir: results
 report:
-  group_name: "TBD"
-  students: []
+  group_name: "Mohamed-Saed"
+  students: ["Mohamed", "Saed"]
   github_repo: "https://github.com/Saed-Abdalgani/HW6_Dual-AI-Agent-Cop-Thief-Chase-via-MCP-Servers"
 timezone: "Asia/Jerusalem"
 seed: null

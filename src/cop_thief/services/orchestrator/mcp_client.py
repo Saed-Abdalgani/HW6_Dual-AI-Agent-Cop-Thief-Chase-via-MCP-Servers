@@ -54,20 +54,25 @@ class McpClient:
     async def _invoke(
         self, server: ServerName, tool: str, args: dict[str, Any],
     ) -> dict[str, Any]:
-        target = f"{server}_mcp"
+        direct = isinstance(self._backend, DirectMcpBackend)
+        target = f"mcp-direct:{server}" if direct else f"{server}_mcp"
 
         async def _remote() -> dict[str, Any]:
             merged = {**args, "token": self._token(server)}
             return await call_remote_tool(self._url(server), tool, merged)
 
         async def _fn() -> dict[str, Any]:
-            if isinstance(self._backend, DirectMcpBackend):
+            if direct:
                 return await self._backend.call_tool(server, tool, args)
             return await _remote()
 
-        if isinstance(self._backend, DirectMcpBackend):
-            return await _fn()
-        resp = await self._gk.call(OutboundRequest(target=target, fn=_fn))
+        resp = await self._gk.call(
+            OutboundRequest(
+                target=target,
+                fn=_fn,
+                metadata={"server": server, "tool": tool, "direct": direct},
+            )
+        )
         return resp.result
 
     async def send_message(self, from_agent: str, text: str) -> dict[str, Any]:

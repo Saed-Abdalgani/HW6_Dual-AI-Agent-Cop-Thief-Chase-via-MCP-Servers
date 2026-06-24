@@ -197,6 +197,9 @@ class CopThiefSDK:
 ## 8. API Gatekeeper
 
 All outbound calls (LLM, MCP HTTP, Gmail) go through `shared.gatekeeper`.
+Local in-process MCP calls use the same Gatekeeper path with an `mcp-direct:*`
+target label so rate limiting, retries, timeouts, and logging stay consistent
+between development and HTTP/cloud runs.
 
 ```python
 class Gatekeeper:
@@ -224,14 +227,16 @@ requires a valid auth token (verified by `shared.auth`). The LLM is **not** here
 | `receive_message` | `{for_agent}` | `{text, msg_id}` | Latest NL message addressed to the agent |
 | `update_position` | `{agent, pos}` | `{ok, pos}` | Engine-authoritative position write/verify |
 | `verify_position` | `{agent}` | `{pos}` | Returns the agent's own known position |
-| `choose_action` | `{agent, observation}` | `{action}` | Returns chosen action (move/diagonal/stay/barrier) |
+| `choose_action` | `{agent, observation}` | `{action}` | Contract/helper tool; autonomous orchestrator strategies usually decide client-side |
 | `apply_action` | `{agent, action}` | `{state_delta, legal}` | Bridges to engine; rejects illegal actions |
-| `game_status` | `{}` | `{move_count, scores, over, winner}` | Engine snapshot for orchestration |
+| `game_status` | `{}` | `{cop_pos, thief_pos, barriers, barriers_used, move_count, scores, over, winner}` | Engine snapshot for orchestration |
 
 - **Action vocabulary:** `up, down, left, right, up_left, up_right, down_left, down_right, stay,
   place_barrier` (cop only for `place_barrier`).
 - Tools **validate inputs** (bounds, turn ownership, barrier limit) and return structured errors.
 - Tools are thin: heavy game logic stays in `engine` via the orchestrator; servers only mediate.
+- The LLM and strategy implementations never run inside MCP servers. The
+  orchestrator chooses actions, validates them, and calls `apply_action`.
 
 ---
 
@@ -249,7 +254,11 @@ thief_moves_first: true
 discount_gamma: 0.95
 strategy: heuristic            # heuristic | qlearning | llm
 llm: { provider: openai, model: gpt-4o-mini, timeout_s: 30 }
-mcp: { cop_url: "http://localhost:8001", thief_url: "http://localhost:8002" }
+mcp:
+  mode: direct                 # direct | http | auto
+  auto_launch: true            # used when mode=http and URLs are localhost
+  cop_url: "http://localhost:8001"
+  thief_url: "http://localhost:8002"
 gatekeeper: { rate_limit_per_target: 5, max_retries: 3, queue_size: 64, timeout_s: 30 }
 email: { to: "rmisegal+uoh26b@gmail.com" }
 timezone: "Asia/Jerusalem"

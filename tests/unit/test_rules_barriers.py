@@ -54,24 +54,66 @@ def test_thief_cannot_place_barrier() -> None:
     assert b.barriers_used == 0
 
 
-def test_cop_places_barrier_on_current_cell() -> None:
-    """Cop's place_barrier blocks the cop's current cell."""
+def test_cop_places_barrier_and_relocates_off_blocked_cell() -> None:
+    """Cop's place_barrier blocks the current cell and relocates the cop."""
     b = make_board(cop=(2, 2), thief=(4, 4))
     rules = make_rules()
     result = rules.apply_action(b, Agent.COP, Action.PLACE_BARRIER)
     assert result.legal is True
     assert result.barrier_placed is True
-    assert b.cop_pos == (2, 2)
     assert b.is_blocked((2, 2)) is True
+    assert b.cop_pos == (1, 2)
+    assert result.new_pos == (1, 2)
+    assert b.is_blocked(b.cop_pos) is False
     assert b.barriers_used == 1
 
 
-def test_cop_does_not_move_when_placing_barrier() -> None:
-    """Cop position is unchanged after barrier placement."""
+def test_cop_barrier_relocation_uses_next_legal_adjacent_cell() -> None:
+    """Relocation skips blocked adjacent cells deterministically."""
     b = make_board(cop=(1, 1), thief=(4, 4))
+    b.place_barrier((0, 1))
     rules = make_rules()
-    rules.apply_action(b, Agent.COP, Action.PLACE_BARRIER)
+    result = rules.apply_action(b, Agent.COP, Action.PLACE_BARRIER)
+    assert result.legal is True
+    assert b.cop_pos == (2, 1)
+    assert b.is_blocked((1, 1)) is True
+    assert b.barriers_used == 2
+
+
+def test_duplicate_barrier_rejected_without_consuming_budget() -> None:
+    """A second barrier on the same cell is rejected and leaves budget unchanged."""
+    b = make_board(cop=(2, 2), thief=(4, 4))
+    b.place_barrier((2, 2))
+    before = b.barriers_used
+    rules = make_rules()
+    result = rules.apply_action(b, Agent.COP, Action.PLACE_BARRIER)
+    assert result.legal is False
+    assert "already exists" in (result.rejection_reason or "")
+    assert b.barriers_used == before
+
+
+def test_place_barrier_rejected_when_cop_cannot_relocate() -> None:
+    """Barrier placement is atomic when no adjacent legal relocation exists."""
+    b = make_board(cop=(1, 1), thief=(0, 0), rows=3, cols=3)
+    b.barriers = frozenset(
+        {
+            (0, 1),
+            (0, 2),
+            (1, 0),
+            (1, 2),
+            (2, 0),
+            (2, 1),
+            (2, 2),
+        }
+    )
+    b.barriers_used = len(b.barriers)
+    rules = make_rules(max_barriers=8)
+    result = rules.apply_action(b, Agent.COP, Action.PLACE_BARRIER)
+    assert result.legal is False
+    assert "No legal relocation" in (result.rejection_reason or "")
+    assert b.is_blocked((1, 1)) is False
     assert b.cop_pos == (1, 1)
+    assert b.barriers_used == 7
 
 
 def test_sixth_barrier_rejected() -> None:

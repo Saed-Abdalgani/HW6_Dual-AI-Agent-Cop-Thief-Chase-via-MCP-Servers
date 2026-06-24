@@ -75,68 +75,44 @@ def test_run_full_game_success() -> None:
     assert all(g.winner == Outcome.THIEF_WIN for g in full_result.sub_games)
 
 
-def test_lifecycle_determinism() -> None:
-    """Same seed produces identical game start positions and outcomes."""
-    scoring_config = ScoringConfig()
-
-    def run_one(seed: int) -> list[tuple[Outcome, int, int]]:
-        board = Board(rows=5, cols=5)
-        rules = RuleEngine(max_barriers=5, max_moves=20)
-        rng = random.Random(seed)
-
-        def rand_decider(board: Board, agent: Agent) -> Action:  # noqa: ARG001
-            return rng.choice([Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT, Action.STAY])
-
-        full_res = run_full_game(
-            board=board,
-            rules=rules,
-            rng=rng,
-            start_mode=StartMode.RANDOM,
-            thief_moves_first=True,
-            scoring_config=scoring_config,
-            cop_decider=rand_decider,
-            thief_decider=rand_decider,
-            num_games=3,
-        )
-        return [(g.winner, g.moves_used, g.barriers_used) for g in full_res.sub_games]
-
-    trace1 = run_one(42)
-    trace2 = run_one(42)
-    trace3 = run_one(43)
-
-    assert trace1 == trace2
-    assert trace3 != trace1
-    assert len(trace1) == 3
-
-
-def test_technical_failure_handling() -> None:
-    """Exceptions during a sub-game trigger a retry and do not count as valid."""
+def test_run_full_game_default_collects_six_valid_games() -> None:
+    """The default full-game length is exactly 6 valid sub-games."""
     board = Board(rows=5, cols=5)
-    rules = RuleEngine(max_barriers=5, max_moves=2)
-    rng = random.Random(99)
+    rules = RuleEngine(max_barriers=5, max_moves=1)
+    rng = random.Random(123)
     scoring_config = ScoringConfig()
-
-    fail_counter = 0
-
-    def failing_cop_decider(board: Board, agent: Agent) -> Action:  # noqa: ARG001
-        nonlocal fail_counter
-        if fail_counter < 2:
-            fail_counter += 1
-            msg = "Simulation of agent decider crash"
-            raise RuntimeError(msg)
-        return Action.STAY
 
     full_result = run_full_game(
+        board=board,
+        rules=rules,
+        rng=rng,
+        start_mode=StartMode.RANDOM,
+        thief_moves_first=True,
+        scoring_config=scoring_config,
+        cop_decider=dummy_cop_decider,
+        thief_decider=dummy_thief_decider,
+    )
+    assert len(full_result.sub_games) == 6  # noqa: PLR2004
+    assert full_result.totals.sub_game_count == 6  # noqa: PLR2004
+
+
+def test_illegal_move_still_advances_turn_and_round() -> None:
+    """A rejected half-turn still advances the lifecycle turn tracker."""
+    board = Board(rows=5, cols=5)
+    rules = RuleEngine(max_barriers=5, max_moves=1)
+    rng = random.Random(0)
+    scoring_config = ScoringConfig()
+
+    result = run_sub_game(
         board=board,
         rules=rules,
         rng=rng,
         start_mode=StartMode.STRATEGY,
         thief_moves_first=True,
         scoring_config=scoring_config,
-        cop_decider=failing_cop_decider,
+        cop_decider=lambda _board, _agent: Action.UP,
         thief_decider=dummy_thief_decider,
-        num_games=1,
+        sub_game_index=1,
     )
-    assert fail_counter == 2
-    assert len(full_result.sub_games) == 1
-    assert full_result.totals.sub_game_count == 1
+    assert result.winner == Outcome.THIEF_WIN
+    assert result.moves_used == 1

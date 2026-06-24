@@ -101,11 +101,11 @@ def test_technical_failure_rerun(fast_config: Path, monkeypatch: pytest.MonkeyPa
     calls = {"n": 0}
     original = sdk._loop.run_sub_game  # noqa: SLF001
 
-    async def flaky_run(index: int):  # noqa: ANN202
+    async def flaky_run(index: int, on_frame=None):  # noqa: ANN001, ANN202
         calls["n"] += 1
         if calls["n"] == 1:
             raise RuntimeError("simulated technical failure")
-        return await original(index)
+        return await original(index, on_frame=on_frame)
 
     monkeypatch.setattr(sdk._loop, "run_sub_game", flaky_run)  # noqa: SLF001
     report = sdk.run_full_game()

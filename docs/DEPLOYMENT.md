@@ -15,7 +15,22 @@ Ollama or local LLM ports are never exposed.
 
 ## Required Secrets
 
-Set on **all three** cloud services:
+Set these as Render environment variables. Never commit real values.
+
+| Variable | Services | Purpose |
+|----------|----------|---------|
+| `MCP_STATE_TOKEN` | state, cop, thief | Auth for shared state storage |
+| `MCP_COP_TOKEN` | cop, thief, local verifier | Bearer token for cop MCP calls |
+| `MCP_THIEF_TOKEN` | cop, thief, local verifier | Bearer token for thief MCP calls |
+| `MCP_STATE_URL` | cop, thief | Public HTTPS state-service base URL |
+| `MCP_COP_URL` | cop, thief, local verifier | Public HTTPS cop MCP base URL |
+| `MCP_THIEF_URL` | cop, thief, local verifier | Public HTTPS thief MCP base URL |
+| `MCP_REVOKED_TOKENS` | cop, thief | Optional comma-separated revoked tokens |
+| `SERVER_ROLE` | cop, thief | `cop` or `thief`; set by blueprint |
+| `LLM_API_KEY` | local orchestrator | Required only when using LLM strategy/provider |
+| `GMAIL_ACCESS_TOKEN` | local orchestrator | Required only for final email dispatch |
+
+Minimum shared secrets on **all three** cloud services:
 
 - `MCP_STATE_TOKEN` — bearer token for the shared state service
 - `MCP_COP_TOKEN` — orchestrator → cop MCP
@@ -51,6 +66,7 @@ Then point a local config at `http://localhost:8001` and `http://localhost:8002`
 ```bash
 set MCP_COP_URL=https://<cop-service-url>
 set MCP_THIEF_URL=https://<thief-service-url>
+set MCP_MODE=http
 set CONFIG_PATH=config/config.cloud.yaml
 uv run cop-thief-verify-cloud
 ```
@@ -65,6 +81,8 @@ uv run cop-thief
 ```
 
 The SDK auto-selects remote MCP when HTTPS cloud URLs are configured.
+`config/config.cloud.yaml` pins `mcp.mode: http`; keep that value for deployed
+MCP verification and full submission runs.
 
 ## Acceptance Checks
 

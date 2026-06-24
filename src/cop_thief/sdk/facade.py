@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import random
+from collections.abc import Callable
 
 from cop_thief.mcp_servers import _state
 from cop_thief.sdk._facade_types import FullGameReport, GameState, HealthStatus
@@ -40,16 +41,7 @@ class CopThiefSDK:
         llm_caller: object | None = None,
         report_sender: ReportSender | None = None,
     ) -> None:
-        """Initialize orchestrator wiring from *config*.
-
-        Args:
-            config: Validated runtime configuration.
-            use_direct_mcp: In-process MCP tools; ``None`` auto-detects from config.
-            auto_launch_servers: Spawn local MCP subprocesses when remote URLs are local.
-            llm_caller: Optional async callable(prompt) -> str for tests.
-            report_sender: Optional report sender override for tests.
-
-        """
+        """Initialize orchestrator wiring from *config*."""
         assert_hybrid_client_safe(config)
         direct, launch = resolve_mcp_wiring(config)
         if use_direct_mcp is None:
@@ -82,11 +74,12 @@ class CopThiefSDK:
             ActionValidator(),
             TranscriptLogger(config.nlp.transcript_dir),
         )
-        self._loop = GameLoop(
-            config, self._mcp, self._turn, random.Random(config.seed),
+        self._loop = GameLoop(config, self._mcp, self._turn, random.Random(config.seed))
+        self._state = GameState(
+            grid_size=config.grid_size,
+            max_barriers=config.max_barriers,
+            idle=True,
         )
-        self._state = GameState(grid_size=config.grid_size)
-        self._launcher: McpServerLauncher | None = None
 
     @classmethod
     def from_env(cls, **kwargs: object) -> CopThiefSDK:
@@ -96,13 +89,13 @@ class CopThiefSDK:
     def _run_async(self, coro: object) -> object:
         return asyncio.run(coro)  # type: ignore[arg-type]
 
-    def run_full_game(self) -> FullGameReport:
+    def run_full_game(self, on_frame: Callable[[GameState], None] | None = None) -> FullGameReport:
         """Run 6 valid sub-games autonomously and return aggregated results."""
         if self._auto_launch and not self._use_direct:
             with McpServerLauncher(self._config):
-                result = self._run_async(self._loop.run_full_game())
+                result = self._run_async(self._loop.run_full_game(on_frame=on_frame))
         else:
-            result = self._run_async(self._loop.run_full_game())
+            result = self._run_async(self._loop.run_full_game(on_frame=on_frame))
         report_json, email = self._run_async(
             dispatch_final_report(self._config, self._gk, result, self._report_sender),
         )
@@ -112,9 +105,13 @@ class CopThiefSDK:
             email=email,  # type: ignore[arg-type]
         )
 
-    def run_sub_game(self, index: int = 1) -> SubGameResult:
+    def run_sub_game(
+        self,
+        index: int = 1,
+        on_frame: Callable[[GameState], None] | None = None,
+    ) -> SubGameResult:
         """Run a single sub-game and return its result."""
-        result = self._run_async(self._loop.run_sub_game(index))
+        result = self._run_async(self._loop.run_sub_game(index, on_frame=on_frame))
         frames = self.get_replay_frames()
         if frames:
             self._state = frames[-1]
@@ -135,7 +132,10 @@ class CopThiefSDK:
         self._state = GameState(
             cop_pos=tuple(cop["pos"]),
             thief_pos=tuple(thief["pos"]),
+            barriers=[tuple(item) for item in status.get("barriers", [])],
             move_count=status.get("move_count", 0),
+            barriers_used=status.get("barriers_used", 0),
+            max_barriers=self._config.max_barriers,
             over=status.get("over", False),
             winner=status.get("winner"),
             scores=status.get("scores", {"cop": 0, "thief": 0}),

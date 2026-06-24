@@ -6,12 +6,14 @@ Traces: FR-L1, FR-L2, FR-L3, T-P3-09, T-P3-10.
 from __future__ import annotations
 
 import random
+from collections.abc import Callable
 
 from cop_thief.constants import Outcome
 from cop_thief.services.engine._board_helpers import choose_start_positions
 from cop_thief.services.engine._lifecycle_types import FullGameResult, SubGameResult
 from cop_thief.services.engine.scoring import calculate_score
 from cop_thief.services.orchestrator._result_collector import ResultCollector
+from cop_thief.services.orchestrator._snapshots import build_turn_frame
 from cop_thief.services.orchestrator._turn_tracker import TurnTracker
 from cop_thief.services.orchestrator._types import GameState
 from cop_thief.services.orchestrator.mcp_client import McpClient
@@ -64,41 +66,27 @@ class GameLoop:
                 thief_pos=thief,
                 move_count=0,
                 barriers_used=0,
+                max_barriers=self._cfg.max_barriers,
                 sub_game_index=0,
                 grid_size=self._cfg.grid_size,
             ),
         ]
 
-    def _append_snapshot(self, index: int, result: TurnResult, status: dict) -> None:
+    def _append_snapshot(self, index: int, result: TurnResult, status: dict) -> GameState:
         """Append one GUI frame after a legal MCP turn."""
-        prev = self._snapshots[-1]
-        cop_pos, thief_pos = prev.cop_pos, prev.thief_pos
-        if result.new_pos and result.agent.value == "cop":
-            cop_pos = result.new_pos
-        if result.new_pos and result.agent.value == "thief":
-            thief_pos = result.new_pos
-        barriers = list(prev.barriers)
-        if result.barrier_placed and result.new_pos:
-            barriers.append(result.new_pos)
-        self._snapshots.append(
-            GameState(
-                cop_pos=cop_pos,
-                thief_pos=thief_pos,
-                barriers=barriers,
-                move_count=status.get("move_count", prev.move_count),
-                barriers_used=len(barriers),
-                over=status.get("over", False),
-                winner=status.get("winner"),
-                scores=status.get("scores", prev.scores),
-                sub_game_index=index,
-                latest_message=result.nl_message,
-                grid_size=self._cfg.grid_size,
-            ),
-        )
+        frame = build_turn_frame(self._cfg, index, self._snapshots[-1], result, status)
+        self._snapshots.append(frame)
+        return frame
 
-    async def run_sub_game(self, index: int) -> SubGameResult:
+    async def run_sub_game(
+        self,
+        index: int,
+        on_frame: Callable[[GameState], None] | None = None,
+    ) -> SubGameResult:
         """Play one sub-game to completion via MCP."""
         await self._reset_sub_game()
+        if on_frame:
+            on_frame(self._snapshots[-1])
         self._turn.start_transcript(index)
         tracker = TurnTracker(self._cfg.thief_moves_first)
         turns = 0
@@ -113,7 +101,9 @@ class GameLoop:
                 tracker.advance()
                 stalls = 0
                 post_status = await self._mcp.game_status()
-                self._append_snapshot(index, result, post_status)
+                frame = self._append_snapshot(index, result, post_status)
+                if on_frame:
+                    on_frame(frame)
             else:
                 stalls += 1
                 if stalls > 4:  # noqa: PLR2004
@@ -130,7 +120,10 @@ class GameLoop:
             score=score,
         )
 
-    async def run_full_game(self) -> FullGameResult:
+    async def run_full_game(
+        self,
+        on_frame: Callable[[GameState], None] | None = None,
+    ) -> FullGameResult:
         """Run until *num_games* valid sub-games; rerun on technical failure."""
         collector = ResultCollector()
         attempts = 0
@@ -138,7 +131,7 @@ class GameLoop:
             attempts += 1
             sub_index = collector.count + 1
             try:
-                result = await self.run_sub_game(sub_index)
+                result = await self.run_sub_game(sub_index, on_frame=on_frame)
             except Exception:  # noqa: BLE001
                 _log.exception("Technical failure on sub-game %d; retrying.", sub_index)
                 continue

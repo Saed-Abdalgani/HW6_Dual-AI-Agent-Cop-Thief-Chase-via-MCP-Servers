@@ -14,18 +14,7 @@ __all__ = ["TokenRecord", "TokenStore", "default_store"]
 
 
 class TokenStore:
-    """Thread-safe token registry: issue, verify, and revoke bearer tokens.
-
-    Usage::
-
-        store = TokenStore()
-        raw_token = store.issue("cop")   # give this to the cop MCP client
-        store.verify(raw_token)           # → True
-        store.revoke(raw_token)
-        store.verify(raw_token)           # → False
-
-    The raw token is **never** stored — only its HMAC-SHA256 hash is kept.
-    """
+    """Thread-safe token registry; raw tokens are never stored."""
 
     def __init__(self) -> None:
         """Initialize the token store with a fresh in-process HMAC secret."""
@@ -57,6 +46,7 @@ class TokenStore:
             self._records[token_id] = record
             self._hash_index[token_hash] = token_id
         return raw_token
+
     def register_token(self, agent: str, raw_token: str) -> None:
         """Register a pre-determined raw token for *agent*.
 

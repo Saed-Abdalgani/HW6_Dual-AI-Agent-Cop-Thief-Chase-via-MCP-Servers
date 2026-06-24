@@ -27,15 +27,26 @@ def cloud_urls_ready(config: Config) -> bool:
 
 def resolve_mcp_wiring(config: Config) -> tuple[bool, bool]:
     """Return ``(use_direct_mcp, auto_launch_servers)`` for *config*."""
+    hosts = _mcp_hosts(config)
+    localhost = hosts <= {"localhost", "127.0.0.1"}
+
+    if config.mcp.mode == "direct":
+        return True, False
+    if config.mcp.mode == "http":
+        return False, bool(config.mcp.auto_launch and localhost)
     if cloud_urls_ready(config):
         return False, False
-    hosts = {
+    if localhost:
+        return True, False
+    return False, False
+
+
+def _mcp_hosts(config: Config) -> set[str | None]:
+    """Return hostnames configured for both MCP endpoints."""
+    return {
         urlparse(config.mcp.cop_url).hostname,
         urlparse(config.mcp.thief_url).hostname,
     }
-    if hosts <= {"localhost", "127.0.0.1"}:
-        return True, False
-    return False, False
 
 
 def assert_hybrid_client_safe(config: Config) -> None:

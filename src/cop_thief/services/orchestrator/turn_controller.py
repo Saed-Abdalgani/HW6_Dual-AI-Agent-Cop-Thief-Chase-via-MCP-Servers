@@ -63,6 +63,7 @@ class TurnController:
             self._transcript.start(sub_game_index)
 
     async def _load_context(self, agent: Agent, move_count: int) -> Observation:
+        status = await self._mcp.game_status()
         pos_resp = await self._mcp.verify_position(agent.value)
         own_pos = tuple(pos_resp["pos"])
         msg_resp = await self._mcp.receive_message(agent.value)
@@ -71,8 +72,8 @@ class TurnController:
         return self._estimator.build_observation(
             agent=agent,
             own_pos=own_pos,
-            barriers=frozenset(),
-            barriers_used=0,
+            barriers=_barrier_set(status),
+            barriers_used=int(status.get("barriers_used", 0)),
             max_barriers=self._cfg.max_barriers,
             move_count=move_count,
             last_message=last_msg,
@@ -116,3 +117,8 @@ class TurnController:
             over=bool(delta.get("over", False)),
             winner=delta.get("winner"),
         )
+
+
+def _barrier_set(status: dict) -> frozenset[tuple[int, int]]:
+    """Parse MCP game_status barrier payload into immutable positions."""
+    return frozenset(tuple(barrier) for barrier in status.get("barriers", []))

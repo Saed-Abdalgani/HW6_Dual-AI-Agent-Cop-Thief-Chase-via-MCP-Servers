@@ -19,6 +19,7 @@ class TranscriptLogger:
         """Store the transcript output directory."""
         self._root = Path(root)
         self._path: Path | None = None
+        self._sub_game_index = 0
 
     @property
     def path(self) -> Path | None:
@@ -28,6 +29,7 @@ class TranscriptLogger:
     def start(self, sub_game_index: int) -> Path:
         """Open a fresh transcript for one sub-game."""
         self._root.mkdir(parents=True, exist_ok=True)
+        self._sub_game_index = sub_game_index
         self._path = self._root / f"nl_transcript_subgame_{sub_game_index}.jsonl"
         self._path.write_text("", encoding="utf-8")
         return self._path
@@ -38,6 +40,8 @@ class TranscriptLogger:
             return
         event = {
             "ts": datetime.now(UTC).isoformat(),
+            "sub_game_index": self._sub_game_index,
+            "turn": move_count,
             "agent": agent.value,
             "action": action.value,
             "move_count": move_count,

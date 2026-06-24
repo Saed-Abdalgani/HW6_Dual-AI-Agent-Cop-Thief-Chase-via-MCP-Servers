@@ -60,8 +60,12 @@ def build_board_view(state: GameState, canvas_size: int = 560) -> BoardView:
             fill, label = PALETTE["empty"], ""
             if pos in barriers:
                 fill, label = PALETTE["barrier"], "B"
-            if pos == state.cop_pos == state.thief_pos:
+            if state.idle:
+                pass
+            elif pos == state.cop_pos == state.thief_pos:
                 fill, label = PALETTE["both"], "CT"
+            elif pos == state.cop_pos and pos in barriers:
+                fill, label = PALETTE["cop"], "C+B"
             elif pos == state.cop_pos:
                 fill, label = PALETTE["cop"], "C"
             elif pos == state.thief_pos:
@@ -72,14 +76,23 @@ def build_board_view(state: GameState, canvas_size: int = 560) -> BoardView:
         cells=tuple(cells),
         status=_status_text(state),
         score=f"Cop {state.scores.get('cop', 0)} | Thief {state.scores.get('thief', 0)}",
-        message=state.latest_message or "Waiting for the next message.",
+        message=_message_text(state),
         rows=rows,
         cols=cols,
     )
 
 
 def _status_text(state: GameState) -> str:
+    if state.idle:
+        return "Press Run to start"
+    barriers = f"Barriers {state.barriers_used}/{state.max_barriers}"
     if state.over:
         winner = "Cop captured the thief" if state.winner == "cop_win" else "Thief escaped"
-        return f"{winner} after {state.move_count} rounds"
-    return f"Sub-game {state.sub_game_index or 1} | Round {state.move_count}"
+        return f"{winner} after {state.move_count} rounds | {barriers}"
+    return f"Sub-game {state.sub_game_index or 1} | Round {state.move_count} | {barriers}"
+
+
+def _message_text(state: GameState) -> str:
+    if state.idle:
+        return "Press Run to start the autonomous match."
+    return state.latest_message or "Waiting for the next message."

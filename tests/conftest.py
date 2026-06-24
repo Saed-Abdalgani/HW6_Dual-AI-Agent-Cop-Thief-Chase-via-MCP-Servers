@@ -58,7 +58,12 @@ def valid_config_yaml(tmp_path: Path) -> Path:
           provider: openai
           model: gpt-4o-mini
           timeout_s: 30
+        qlearning:
+          learning_rate: 0.1
+          epsilon: 0.1
         mcp:
+          mode: direct
+          auto_launch: true
           cop_url: "http://localhost:8001"
           thief_url: "http://localhost:8002"
         gatekeeper:

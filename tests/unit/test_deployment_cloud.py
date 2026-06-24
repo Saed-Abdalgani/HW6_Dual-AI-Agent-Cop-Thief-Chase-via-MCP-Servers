@@ -23,11 +23,42 @@ def test_resolve_mcp_wiring_localhost_uses_direct(valid_config_yaml: object) -> 
     assert resolve_mcp_wiring(cfg) == (True, False)
 
 
+def test_resolve_mcp_wiring_http_localhost_auto_launches() -> None:
+    cfg = Config.model_validate(
+        {
+            "email": {"to": "test@example.com"},
+            "mcp": {
+                "mode": "http",
+                "auto_launch": True,
+                "cop_url": "http://localhost:8001",
+                "thief_url": "http://127.0.0.1:8002",
+            },
+        },
+    )
+    assert resolve_mcp_wiring(cfg) == (False, True)
+
+
+def test_resolve_mcp_wiring_http_localhost_can_skip_auto_launch() -> None:
+    cfg = Config.model_validate(
+        {
+            "email": {"to": "test@example.com"},
+            "mcp": {
+                "mode": "http",
+                "auto_launch": False,
+                "cop_url": "http://localhost:8001",
+                "thief_url": "http://localhost:8002",
+            },
+        },
+    )
+    assert resolve_mcp_wiring(cfg) == (False, False)
+
+
 def test_resolve_mcp_wiring_cloud_uses_remote() -> None:
     cfg = Config.model_validate(
         {
             "email": {"to": "test@example.com"},
             "mcp": {
+                "mode": "auto",
                 "cop_url": "https://cop-thief-cop.onrender.com",
                 "thief_url": "https://cop-thief-thief.onrender.com",
             },

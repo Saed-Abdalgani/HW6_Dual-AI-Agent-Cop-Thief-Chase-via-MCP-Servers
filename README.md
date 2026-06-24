@@ -85,7 +85,9 @@ cp .env-example .env   # fill secrets (never commit .env)
 uv run cop-thief
 ```
 
-Runs six valid sub-games with zero manual steps; dispatches JSON report when `GMAIL_ACCESS_TOKEN` is set.
+Runs six valid sub-games with zero manual steps; dispatches JSON report when
+`GMAIL_ACCESS_TOKEN` is set. By default this uses direct in-process MCP tools
+for a fast local developer run.
 
 ### MCP servers (local)
 
@@ -93,6 +95,36 @@ Runs six valid sub-games with zero manual steps; dispatches JSON report when `GM
 uv run python -m cop_thief.mcp_servers.cop_server    # default :8001
 uv run python -m cop_thief.mcp_servers.thief_server  # default :8002
 ```
+
+The MCP servers are tool surfaces, not strategy hosts. They expose contract
+tools such as `send_message`, `receive_message`, `verify_position`,
+`apply_action`, `place_barrier`, `game_status`, and `choose_action`; the
+autonomous run uses client-side strategies in the orchestrator and applies the
+chosen action through `apply_action`. LLM calls, Q-learning, heuristics, turn
+control, retries, scoring, and report dispatch stay in the orchestrator/engine.
+
+### Localhost HTTP verification
+
+For assignment evidence that the orchestrator can talk to live local MCP
+servers, set:
+
+```yaml
+mcp:
+  mode: http
+  auto_launch: true
+  cop_url: "http://localhost:8001"
+  thief_url: "http://localhost:8002"
+```
+
+Then run:
+
+```bash
+uv run cop-thief
+```
+
+Expected startup output includes `MCP path: HTTP/SSE, auto-launching local servers`.
+Use `mcp.mode: direct` for the quick path, or `mcp.mode: auto` to use direct MCP
+for localhost URLs and HTTP for deployed HTTPS URLs.
 
 ### GUI replay
 
@@ -104,10 +136,25 @@ uv run cop-thief-gui
 
 ```bash
 set CONFIG_PATH=config/config.cloud.yaml
+set MCP_MODE=http
 uv run cop-thief-verify-cloud
 ```
 
 See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for Docker and Render-style deployment.
+
+Cloud submission checklist:
+
+1. Deploy `cop-thief-state`, `cop-thief-cop-mcp`, and `cop-thief-thief-mcp`.
+2. Set `MCP_STATE_TOKEN`, `MCP_COP_TOKEN`, `MCP_THIEF_TOKEN`, and service URLs in Render.
+3. Set local `CONFIG_PATH=config/config.cloud.yaml`, `MCP_MODE=http`, and the two HTTPS MCP URLs.
+4. Run `uv run cop-thief-verify-cloud`, then `uv run cop-thief` for the full remote-MCP game.
+
+Final report checklist:
+
+1. Set `report.group_name`, `report.students`, and `report.github_repo` in both config files.
+2. Configure either `GMAIL_ACCESS_TOKEN` or `GMAIL_USER` plus `GMAIL_APP_PASSWORD`.
+3. Run `uv run pytest tests/unit/test_report_builder.py tests/unit/test_report_emailer.py -v`.
+4. Run `uv run cop-thief` and confirm the received email body is JSON only.
 
 ---
 
@@ -122,6 +169,8 @@ All tunables live in `config/config.yaml`. Secrets **only** in environment varia
 | `num_games` | Valid sub-games per full game | `6` |
 | `max_barriers` | Cop barrier budget | `5` |
 | `strategy` | `heuristic` \| `qlearning` \| `llm` | `heuristic` |
+| `mcp.mode` | `direct` \| `http` \| `auto` wiring | `direct` |
+| `mcp.auto_launch` | Start localhost servers when `mcp.mode: http` | `true` |
 | `mcp.cop_url` / `mcp.thief_url` | MCP base URLs | localhost ports |
 | `report.*` | JSON report identity fields | see config |
 | `email.to` | Report destination | configured address |
@@ -185,7 +234,7 @@ Final audit: [`docs/FINAL_AUDIT.md`](docs/FINAL_AUDIT.md)
 ```
 CLI / GUI  →  CopThiefSDK  →  GameLoop / TurnController
                 ↓                    ↓
-           Gatekeeper  →  LLM · MCP · Gmail
+           Gatekeeper  →  LLM · MCP HTTP/direct · Gmail
                 ↓
          Engine (rules) + Strategy + NL encoder/parser
 ```
