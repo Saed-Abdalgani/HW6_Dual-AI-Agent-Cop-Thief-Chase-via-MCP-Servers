@@ -18,7 +18,12 @@ import os
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from cop_thief.constants import StartMode, Strategy
-from cop_thief.shared._config_loader import apply_env_overrides, load_secret, load_yaml
+from cop_thief.shared._config_loader import (
+    apply_env_overrides,
+    ensure_dotenv_loaded,
+    load_secret,
+    load_yaml,
+)
 from cop_thief.shared._config_schemas import (
     EmailConfig,
     GatekeeperConfig,
@@ -127,6 +132,7 @@ class Config(BaseModel):
 
         Falls back to ``config/config.yaml`` when ``CONFIG_PATH`` is not set.
         """
+        ensure_dotenv_loaded()
         config_path = os.environ.get("CONFIG_PATH", "config/config.yaml")
         data = apply_env_overrides(load_yaml(config_path))
         return cls.model_validate(data)

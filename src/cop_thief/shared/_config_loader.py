@@ -11,6 +11,17 @@ import os
 from pathlib import Path
 
 import yaml
+from dotenv import load_dotenv
+
+_dotenv_loaded = False
+
+
+def ensure_dotenv_loaded() -> None:
+    """Load ``.env`` from the project root once per process."""
+    global _dotenv_loaded
+    if not _dotenv_loaded:
+        load_dotenv()
+        _dotenv_loaded = True
 
 
 def load_yaml(path: str | Path) -> dict:
@@ -62,6 +73,7 @@ def load_secret(env_var: str, *, required: bool = True) -> str | None:
         OSError: When *required* is ``True`` and the var is absent or empty.
 
     """
+    ensure_dotenv_loaded()
     value = os.environ.get(env_var)
     if required and not value:
         msg = (

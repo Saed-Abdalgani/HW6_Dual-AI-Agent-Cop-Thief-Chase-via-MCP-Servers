@@ -56,7 +56,7 @@ nlp:
 # ── Final report identity ────────────────────────────────────────────────────
 report:
   group_name: "TBD"
-  students: []
+  students: ["Mohamed", "Saed"]
   github_repo: "https://github.com/Saed-Abdalgani/HW6_Dual-AI-Agent-Cop-Thief-Chase-via-MCP-Servers"
 
 # ── Misc ─────────────────────────────────────────────────────────────────────
