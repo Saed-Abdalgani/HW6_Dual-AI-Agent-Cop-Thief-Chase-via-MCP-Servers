@@ -44,11 +44,7 @@ def choose_heuristic_action(obs: Observation) -> Action:
     legal = _legal_moves(obs)
     opp = obs.opp_estimate
 
-    if (
-        obs.agent is Agent.COP
-        and can_place_barrier(obs)
-        and _manhattan(obs.own_pos, opp) <= 1
-    ):
+    if obs.agent is Agent.COP and can_place_barrier(obs) and _manhattan(obs.own_pos, opp) <= 1:
         return Action.PLACE_BARRIER
 
     if obs.agent is Agent.COP:

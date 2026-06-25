@@ -67,7 +67,7 @@ def _http_config(tmp_path: Path, cop_port: int, thief_port: int) -> str:
           thief_url: "http://localhost:{thief_port}"
         gatekeeper: {{ rate_limit_per_target: 100, max_retries: 1, queue_size: 64, timeout_s: 30 }}
         email: {{ to: "test@example.com" }}
-        nlp: {{ tone: balanced, transcript_dir: "{(tmp_path / 'http-results').as_posix()}" }}
+        nlp: {{ tone: balanced, transcript_dir: "{(tmp_path / "http-results").as_posix()}" }}
         timezone: "UTC"
         seed: 7
         """

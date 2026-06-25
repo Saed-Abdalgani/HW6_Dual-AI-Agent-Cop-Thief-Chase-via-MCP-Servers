@@ -92,7 +92,7 @@ def _config(root: Path) -> str:
           thief_url: "http://127.0.0.1:{THIEF_PORT}"
         gatekeeper: {{ rate_limit_per_target: 100, max_retries: 1, queue_size: 64, timeout_s: 30 }}
         email: {{ to: "test@example.com" }}
-        nlp: {{ tone: balanced, transcript_dir: "{(root / 'results').as_posix()}" }}
+        nlp: {{ tone: balanced, transcript_dir: "{(root / "results").as_posix()}" }}
         timezone: "UTC"
         seed: 11
         """

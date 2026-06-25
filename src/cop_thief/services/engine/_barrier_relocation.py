@@ -22,10 +22,6 @@ def relocation_after_barrier(board: Board, current_pos: tuple[int, int]) -> tupl
         if action is Action.STAY:
             continue
         candidate = (current_pos[0] + delta[0], current_pos[1] + delta[1])
-        if (
-            board.in_bounds(candidate)
-            and candidate not in blocked
-            and candidate not in occupied
-        ):
+        if board.in_bounds(candidate) and candidate not in blocked and candidate not in occupied:
             return candidate
     return None

@@ -87,6 +87,7 @@ class CopThiefGui:
         self.status.set(text)
         if self.frames:
             self._draw(self.frames[self.frame_idx])
+
     def play(self) -> None:
         """Animate the loaded replay frames."""
         self.playing = True
