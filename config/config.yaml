@@ -23,14 +23,14 @@ thief_moves_first: true # Turn order: thief moves before cop each round
 discount_gamma: 0.95    # Discount factor γ for Q-learning (FR-D2, PRD §14)
 
 # ── Decision strategy ────────────────────────────────────────────────────────
-strategy: heuristic     # "heuristic" | "qlearning" | "llm" — chosen strategy
+strategy: heuristic  # "heuristic" | "qlearning" | "llm" — use llm when LLM_API_KEY is set
 
 # ── LLM configuration ────────────────────────────────────────────────────────
 llm:
   provider: openai      # "openai" | "anthropic" | "gemini" | "ollama"
-  model: gpt-4o-mini    # OpenRouter example: openai/gpt-4o-mini
+  model: openai/gpt-4o-mini
   timeout_s: 30         # Per-call timeout in seconds
-  base_url: null        # e.g. https://openrouter.ai/api/v1 or Ollama localhost
+  base_url: https://openrouter.ai/api/v1
 
 # ── Q-learning configuration ────────────────────────────────────────────────
 qlearning:
@@ -39,7 +39,7 @@ qlearning:
 
 # ── MCP server URLs ──────────────────────────────────────────────────────────
 mcp:
-  mode: direct                         # "direct" | "http" | "auto"
+  mode: http                           # "direct" | "http" | "auto"
   auto_launch: true                    # Start local servers when mode=http
   cop_url: "http://localhost:8001"    # Cop MCP server URL (local or cloud)
   thief_url: "http://localhost:8002"  # Thief MCP server URL (local or cloud)

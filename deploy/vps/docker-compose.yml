@@ -1,6 +1,16 @@
+# VPS deployment for 136.112.135.83 (or any Linux host with Docker).
+#
+# Usage on the server:
+#   cp deploy/vps/env.example deploy/vps/.env   # fill tokens
+#   docker compose -f deploy/vps/docker-compose.yml up -d --build
+#
+# Open firewall ports 8001, 8002, 8090 (or put Caddy in front — see deploy/vps/Caddyfile).
+
 services:
   state:
-    build: .
+    build:
+      context: ../..
+      dockerfile: Dockerfile
     command: ["uv", "run", "cop-thief-state"]
     restart: unless-stopped
     environment:
@@ -11,40 +21,44 @@ services:
       - "8090:8090"
 
   cop-mcp:
-    build: .
+    build:
+      context: ../..
+      dockerfile: Dockerfile
     command: ["uv", "run", "cop-thief-mcp"]
     restart: unless-stopped
     environment:
       SERVER_ROLE: cop
       CONFIG_PATH: config/config.cloud.yaml
-      MCP_HOST: "0.0.0.0"
       MCP_COP_TOKEN: ${MCP_COP_TOKEN}
       MCP_THIEF_TOKEN: ${MCP_THIEF_TOKEN}
       MCP_REVOKED_TOKENS: ${MCP_REVOKED_TOKENS:-}
       MCP_STATE_URL: http://state:8090
       MCP_STATE_TOKEN: ${MCP_STATE_TOKEN}
-      MCP_COP_URL: ${MCP_COP_URL:-http://localhost:8001}
-      MCP_THIEF_URL: ${MCP_THIEF_URL:-http://localhost:8002}
+      MCP_COP_URL: ${MCP_COP_URL:-http://136.112.135.83:8001}
+      MCP_THIEF_URL: ${MCP_THIEF_URL:-http://136.112.135.83:8002}
+      MCP_HOST: "0.0.0.0"
     ports:
       - "8001:8001"
     depends_on:
       - state
 
   thief-mcp:
-    build: .
+    build:
+      context: ../..
+      dockerfile: Dockerfile
     command: ["uv", "run", "cop-thief-mcp"]
     restart: unless-stopped
     environment:
       SERVER_ROLE: thief
       CONFIG_PATH: config/config.cloud.yaml
-      MCP_HOST: "0.0.0.0"
       MCP_COP_TOKEN: ${MCP_COP_TOKEN}
       MCP_THIEF_TOKEN: ${MCP_THIEF_TOKEN}
       MCP_REVOKED_TOKENS: ${MCP_REVOKED_TOKENS:-}
       MCP_STATE_URL: http://state:8090
       MCP_STATE_TOKEN: ${MCP_STATE_TOKEN}
-      MCP_COP_URL: ${MCP_COP_URL:-http://localhost:8001}
-      MCP_THIEF_URL: ${MCP_THIEF_URL:-http://localhost:8002}
+      MCP_COP_URL: ${MCP_COP_URL:-http://136.112.135.83:8001}
+      MCP_THIEF_URL: ${MCP_THIEF_URL:-http://136.112.135.83:8002}
+      MCP_HOST: "0.0.0.0"
     ports:
       - "8002:8002"
     depends_on:

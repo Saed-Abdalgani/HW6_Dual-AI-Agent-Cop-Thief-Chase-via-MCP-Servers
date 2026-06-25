@@ -48,8 +48,15 @@ def test_thief_increases_manhattan_distance() -> None:
     assert _dist(own, opp, action) >= abs(own[0] - opp[0]) + abs(own[1] - opp[1])
 
 
-def test_cop_places_barrier_when_adjacent_and_budget() -> None:
+def test_cop_prefers_capture_when_on_estimate_path() -> None:
     action = choose_heuristic_action(_obs(Agent.COP, (1, 0), (0, 0)))
+    assert action is Action.UP
+
+
+def test_cop_places_barrier_when_adjacent_and_cannot_capture() -> None:
+    action = choose_heuristic_action(
+        _obs(Agent.COP, (1, 0), (0, 0), barriers=frozenset({(0, 0)})),
+    )
     assert action is Action.PLACE_BARRIER
 
 

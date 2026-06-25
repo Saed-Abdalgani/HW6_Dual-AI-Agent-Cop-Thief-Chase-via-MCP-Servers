@@ -112,5 +112,23 @@ async def _expect_failure(
     try:
         await _call(gatekeeper, caller, base_url, token)
         return False
-    except Exception:  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
+        # Network/downstream failures are not proof of auth rejection.
+        if _is_connection_error(exc):
+            return False
         return True
+
+
+def _is_connection_error(exc: Exception) -> bool:
+    """Return True when *exc* looks like a transport failure, not bad auth."""
+    msg = str(exc).lower()
+    markers = (
+        "connect",
+        "refused",
+        "timeout",
+        "unreachable",
+        "taskgroup",
+        "name or service not known",
+        "network",
+    )
+    return any(marker in msg for marker in markers)

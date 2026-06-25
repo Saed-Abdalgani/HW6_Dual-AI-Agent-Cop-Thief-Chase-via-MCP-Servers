@@ -24,8 +24,9 @@ qlearning:
 mcp:
   mode: http
   auto_launch: false
-  cop_url: "https://replace-with-cop-mcp.example.com"   # or MCP_COP_URL env
-  thief_url: "https://replace-with-thief-mcp.example.com"  # or MCP_THIEF_URL env
+  # VPS defaults — override with MCP_COP_URL / MCP_THIEF_URL env vars after deploy.
+  cop_url: "http://136.112.135.83:8001"
+  thief_url: "http://136.112.135.83:8002"
 gatekeeper:
   rate_limit_per_target: 3
   max_retries: 4

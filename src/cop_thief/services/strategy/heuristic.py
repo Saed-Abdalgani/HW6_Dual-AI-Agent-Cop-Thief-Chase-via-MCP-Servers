@@ -1,4 +1,4 @@
-"""Manhattan-distance heuristic baseline strategy.
+"""Manhattan-distance heuristic with capture priority and mobility-aware evasion.
 
 Uses opponent *estimate* (not ground truth) for distance calculations.
 
@@ -8,6 +8,7 @@ Traces: FR-D1, FR-NL2, PLAN §14, T-P3-05, T-P4-03..05.
 from __future__ import annotations
 
 from cop_thief.constants import COP_ACTIONS, MOVE_DELTAS, THIEF_ACTIONS, Action, Agent
+from cop_thief.services.orchestrator._thief_apf import choose_thief_action
 from cop_thief.services.orchestrator._types import Observation
 from cop_thief.services.strategy._barrier_policy import can_place_barrier
 from cop_thief.services.strategy.base import Strategy, StrategyDecision
@@ -40,16 +41,27 @@ def _legal_moves(obs: Observation) -> list[Action]:
 
 
 def choose_heuristic_action(obs: Observation) -> Action:
-    """Pick an action using Manhattan distance to ``obs.opp_estimate``."""
+    """Pick an action using role-specific tactical engines."""
+    if obs.agent is Agent.THIEF:
+        return choose_thief_action(obs)
+
+    from cop_thief.services.orchestrator._llm_tactics import rank_actions
+
+    hints = rank_actions(obs, top_n=1)
+    if hints and hints[0].score > -900:
+        return hints[0].action
+
     legal = _legal_moves(obs)
     opp = obs.opp_estimate
-
-    if obs.agent is Agent.COP and can_place_barrier(obs) and _manhattan(obs.own_pos, opp) <= 1:
-        return Action.PLACE_BARRIER
-
     if obs.agent is Agent.COP:
+        capture = [a for a in legal if _manhattan(_target(obs, a), opp) == 0]
+        if capture:
+            return capture[0]
+        if can_place_barrier(obs) and _manhattan(obs.own_pos, opp) == 1:
+            best = min(legal, key=lambda a: _manhattan(_target(obs, a), opp))
+            if _manhattan(_target(obs, best), opp) >= _manhattan(obs.own_pos, opp):
+                return Action.PLACE_BARRIER
         return min(legal, key=lambda a: _manhattan(_target(obs, a), opp))
-    return max(legal, key=lambda a: _manhattan(_target(obs, a), opp))
 
 
 class HeuristicStrategy(Strategy):
