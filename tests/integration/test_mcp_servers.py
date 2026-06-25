@@ -45,6 +45,7 @@ def run_servers(tmp_path_factory: pytest.TempPathFactory) -> object:
 
     # Wait for both servers to be responsive using socket connections
     import socket
+
     ports = [8001, 8002]
     start = time.time()
     for port in ports:
@@ -79,9 +80,10 @@ def _cleanup_state(path: Path) -> None:
 @pytest.mark.asyncio
 async def test_cop_server_tools(run_servers: object) -> None:
     """Test calling tools on the Cop MCP server."""
-    async with sse_client(COP_URL) as (read_stream, write_stream), ClientSession(
-        read_stream, write_stream
-    ) as session:
+    async with (
+        sse_client(COP_URL) as (read_stream, write_stream),
+        ClientSession(read_stream, write_stream) as session,
+    ):
         await session.initialize()
 
         # Verify position (happy path)
@@ -103,9 +105,10 @@ async def test_cop_server_tools(run_servers: object) -> None:
 @pytest.mark.asyncio
 async def test_thief_server_tools(run_servers: object) -> None:
     """Test calling tools on the Thief MCP server."""
-    async with sse_client(THIEF_URL) as (read_stream, write_stream), ClientSession(
-        read_stream, write_stream
-    ) as session:
+    async with (
+        sse_client(THIEF_URL) as (read_stream, write_stream),
+        ClientSession(read_stream, write_stream) as session,
+    ):
         await session.initialize()
 
         # Verify position (happy path)

@@ -43,12 +43,7 @@ def all_free_cells(
         Sorted list of ``(row, col)`` tuples that are in-bounds and free.
 
     """
-    return [
-        (r, c)
-        for r in range(rows)
-        for c in range(cols)
-        if (r, c) not in barriers
-    ]
+    return [(r, c) for r in range(rows) for c in range(cols) if (r, c) not in barriers]
 
 
 def choose_start_positions(

@@ -33,20 +33,29 @@ class DirectMcpBackend:
         merged = {**args, "token": token}
         dispatch: dict[str, object] = {
             "send_message": lambda: tools.send_message(
-                merged["from_agent"], merged["text"], token,
+                merged["from_agent"],
+                merged["text"],
+                token,
             ),
             "receive_message": lambda: tools.receive_message(
-                merged["for_agent"], token,
+                merged["for_agent"],
+                token,
             ),
             "update_position": lambda: tools.update_position(
-                merged["agent"], merged["pos"], token,
+                merged["agent"],
+                merged["pos"],
+                token,
             ),
             "verify_position": lambda: tools.verify_position(merged["agent"], token),
             "choose_action": lambda: tools.choose_action(
-                merged["agent"], merged.get("observation", {}), token,
+                merged["agent"],
+                merged.get("observation", {}),
+                token,
             ),
             "apply_action": lambda: tools.apply_action(
-                merged["agent"], merged["action"], token,
+                merged["agent"],
+                merged["action"],
+                token,
             ),
             "game_status": lambda: tools.game_status(token),
             "place_barrier": lambda: tools.apply_action("cop", "place_barrier", token),

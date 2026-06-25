@@ -74,7 +74,12 @@ class CopThiefSDK:
             ActionValidator(),
             TranscriptLogger(config.nlp.transcript_dir),
         )
-        self._loop = GameLoop(config, self._mcp, self._turn, random.Random(config.seed))
+        self._loop = GameLoop(
+            config,
+            self._mcp,
+            self._turn,
+            random.Random(config.seed),
+        )
         self._state = GameState(
             grid_size=config.grid_size,
             max_barriers=config.max_barriers,

@@ -44,6 +44,7 @@ def game_status(token: str) -> dict:
         "winner": state["winner"],
     }
 
+
 __all__ = [
     "apply_action",
     "authorize",

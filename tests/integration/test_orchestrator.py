@@ -49,7 +49,7 @@ def fast_config(tmp_path: Path, minimal_env: None, monkeypatch: pytest.MonkeyPat
           to: "test@example.com"
         nlp:
           tone: balanced
-          transcript_dir: "{(tmp_path / 'results').as_posix()}"
+          transcript_dir: "{(tmp_path / "results").as_posix()}"
         timezone: "UTC"
         seed: 42
         """

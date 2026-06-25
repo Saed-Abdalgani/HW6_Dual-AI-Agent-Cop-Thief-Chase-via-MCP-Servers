@@ -72,9 +72,7 @@ class TestRedactingFilter:
 
 
 class TestLoggerRedaction:
-    def test_logger_redacts_token_in_output(
-        self, caplog: pytest.LogCaptureFixture
-    ) -> None:
+    def test_logger_redacts_token_in_output(self, caplog: pytest.LogCaptureFixture) -> None:
         """Raw token must not appear in any log record."""
         store = TokenStore()
         raw_token = store.issue("cop")

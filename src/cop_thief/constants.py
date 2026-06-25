@@ -14,6 +14,7 @@ from enum import StrEnum, unique
 # Agent identity
 # ---------------------------------------------------------------------------
 
+
 @unique
 class Agent(StrEnum):
     """Identifies one of the two players."""
@@ -25,6 +26,7 @@ class Agent(StrEnum):
 # ---------------------------------------------------------------------------
 # Action vocabulary
 # ---------------------------------------------------------------------------
+
 
 @unique
 class Action(StrEnum):
@@ -47,9 +49,7 @@ class Action(StrEnum):
 
 
 # Subset of actions available to the thief (excludes place_barrier).
-THIEF_ACTIONS: frozenset[Action] = frozenset(
-    a for a in Action if a is not Action.PLACE_BARRIER
-)
+THIEF_ACTIONS: frozenset[Action] = frozenset(a for a in Action if a is not Action.PLACE_BARRIER)
 
 # All actions available to the cop.
 COP_ACTIONS: frozenset[Action] = frozenset(Action)
@@ -72,6 +72,7 @@ MOVE_DELTAS: dict[Action, tuple[int, int]] = {
 # Game outcome labels
 # ---------------------------------------------------------------------------
 
+
 @unique
 class Outcome(StrEnum):
     """Terminal outcome of a sub-game."""
@@ -86,6 +87,7 @@ class Outcome(StrEnum):
 # Strategy identifiers
 # ---------------------------------------------------------------------------
 
+
 @unique
 class Strategy(StrEnum):
     """Selectable decision strategies (matches config ``strategy`` values)."""
@@ -98,6 +100,7 @@ class Strategy(StrEnum):
 # ---------------------------------------------------------------------------
 # Start-mode identifiers
 # ---------------------------------------------------------------------------
+
 
 @unique
 class StartMode(StrEnum):

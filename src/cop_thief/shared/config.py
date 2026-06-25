@@ -101,10 +101,7 @@ class Config(BaseModel):
     def _validate_cross_fields(self) -> Config:
         """Cross-field invariants that span multiple keys."""
         if self.max_barriers > self.max_moves:
-            msg = (
-                f"max_barriers ({self.max_barriers}) cannot exceed "
-                f"max_moves ({self.max_moves})."
-            )
+            msg = f"max_barriers ({self.max_barriers}) cannot exceed max_moves ({self.max_moves})."
             raise ValueError(msg)
         return self
 

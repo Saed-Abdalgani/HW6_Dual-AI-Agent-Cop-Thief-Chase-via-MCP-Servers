@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import hashlib
@@ -140,4 +139,6 @@ class TokenStore:
     def _hash(self, raw_token: str) -> str:
         """Return the HMAC-SHA256 hex digest of *raw_token*."""
         return hmac.new(self._secret, raw_token.encode(), hashlib.sha256).hexdigest()
+
+
 default_store: TokenStore = TokenStore()

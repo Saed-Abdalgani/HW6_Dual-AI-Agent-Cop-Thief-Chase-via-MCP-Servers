@@ -50,7 +50,7 @@ def pipeline_config(tmp_path: Path, minimal_env: None, monkeypatch: pytest.Monke
           to: "test@example.com"
         nlp:
           tone: balanced
-          transcript_dir: "{(tmp_path / 'results').as_posix()}"
+          transcript_dir: "{(tmp_path / "results").as_posix()}"
         report:
           group_name: "Pipeline-Test"
           students: ["Tester"]

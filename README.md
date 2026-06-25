@@ -249,6 +249,15 @@ Details: [`docs/PLAN.md`](docs/PLAN.md) · Requirements: [`docs/PRD.md`](docs/PR
 2. Keep modules ≤ ~150 LOC; add tests for new logic.
 3. Route external calls through `Gatekeeper`.
 4. Update relevant docs and `docs/TODO.md`.
+5. Before pushing, run CI locally (or install pre-commit hooks once):
+
+   ```bash
+   uv sync --all-extras
+   uv run pre-commit install   # optional: auto-check on every commit
+   uv run ruff check .
+   uv run ruff format --check .
+   uv run pytest tests/
+   ```
 
 ---
 

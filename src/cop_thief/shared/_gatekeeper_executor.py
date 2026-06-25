@@ -54,11 +54,15 @@ async def execute_with_retries(
             latency = time.monotonic() - start
             _log.info(
                 "Gatekeeper success: target=%s attempt=%d latency=%.3fs",
-                request.target, attempt, latency,
+                request.target,
+                attempt,
+                latency,
             )
             return Response(
-                target=request.target, result=result,
-                latency_s=latency, attempts=attempt,
+                target=request.target,
+                result=result,
+                latency_s=latency,
+                attempts=attempt,
             )
         except GatekeeperTimeoutError:
             raise
@@ -67,16 +71,21 @@ async def execute_with_retries(
             if attempt < max_attempts:
                 wait = _backoff(attempt)
                 _log.warning(
-                    "Gatekeeper transient failure: target=%s attempt=%d/%d "
-                    "error=%r wait=%.3fs",
-                    request.target, attempt, max_attempts, str(exc), wait,
+                    "Gatekeeper transient failure: target=%s attempt=%d/%d error=%r wait=%.3fs",
+                    request.target,
+                    attempt,
+                    max_attempts,
+                    str(exc),
+                    wait,
                 )
                 await asyncio.sleep(wait)
 
     latency = time.monotonic() - start
     _log.error(
         "Gatekeeper retries exhausted: target=%s attempts=%d latency=%.3fs",
-        request.target, max_attempts, latency,
+        request.target,
+        max_attempts,
+        latency,
     )
     msg = (
         f"All {max_attempts} attempt(s) failed for target '{request.target}'. "

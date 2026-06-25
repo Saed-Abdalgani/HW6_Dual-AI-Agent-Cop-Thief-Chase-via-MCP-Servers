@@ -24,8 +24,8 @@ class TokenBucket:
 
     def __init__(self, rate: float) -> None:
         """Initialise the bucket at full capacity."""
-        self._rate = rate           # tokens / second
-        self._tokens = rate         # start full
+        self._rate = rate  # tokens / second
+        self._tokens = rate  # start full
         self._last_refill = time.monotonic()
         self._lock = asyncio.Lock()
 

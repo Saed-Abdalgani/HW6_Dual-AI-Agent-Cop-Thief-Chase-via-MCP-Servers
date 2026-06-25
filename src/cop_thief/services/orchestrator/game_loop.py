@@ -55,7 +55,11 @@ class GameLoop:
             await self._mcp.update_position("cop", (0, 0))
         rows, cols = self._cfg.grid_size
         cop, thief = choose_start_positions(
-            rows, cols, frozenset(), self._cfg.start_mode, self._rng,
+            rows,
+            cols,
+            frozenset(),
+            self._cfg.start_mode,
+            self._rng,
         )
         await self._mcp.update_position("cop", cop)
         await self._mcp.update_position("thief", thief)

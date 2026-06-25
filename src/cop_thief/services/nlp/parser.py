@@ -59,9 +59,7 @@ def parse_message(text: str) -> ParsedMessage:
     directions = {
         name for name, words in _DIRECTIONS.items() if any(_contains(lower, w) for w in words)
     }
-    regions = {
-        name for name, words in _REGIONS.items() if any(_contains(lower, w) for w in words)
-    }
+    regions = {name for name, words in _REGIONS.items() if any(_contains(lower, w) for w in words)}
     intents = [name for name, words in _INTENTS.items() if any(_contains(lower, w) for w in words)]
     intent = intents[0] if intents else "unknown"
     confidence = min(1.0, 0.2 + 0.2 * len(directions) + 0.15 * len(regions))

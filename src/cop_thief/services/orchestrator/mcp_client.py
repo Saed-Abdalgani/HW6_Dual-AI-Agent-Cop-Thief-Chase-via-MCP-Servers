@@ -21,7 +21,10 @@ class McpBackend(Protocol):
     """Protocol for pluggable MCP tool invocation."""
 
     async def call_tool(
-        self, server: ServerName, tool: str, args: dict[str, Any],
+        self,
+        server: ServerName,
+        tool: str,
+        args: dict[str, Any],
     ) -> dict[str, Any]:
         """Invoke *tool* on *server* and return the result dict."""
         ...
@@ -52,7 +55,10 @@ class McpClient:
         return self._cop_token if server == "cop" else self._thief_token
 
     async def _invoke(
-        self, server: ServerName, tool: str, args: dict[str, Any],
+        self,
+        server: ServerName,
+        tool: str,
+        args: dict[str, Any],
     ) -> dict[str, Any]:
         direct = isinstance(self._backend, DirectMcpBackend)
         target = f"mcp-direct:{server}" if direct else f"{server}_mcp"

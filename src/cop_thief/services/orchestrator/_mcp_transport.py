@@ -40,9 +40,13 @@ async def call_remote_tool(
     args: dict[str, Any],
 ) -> dict[str, Any]:
     """Call *tool* on an MCP server reachable at *base_url*."""
-    async with sse_client(_sse_url(base_url)) as streams, ClientSession(
-        streams[0], streams[1],
-    ) as session:
+    async with (
+        sse_client(_sse_url(base_url)) as streams,
+        ClientSession(
+            streams[0],
+            streams[1],
+        ) as session,
+    ):
         await session.initialize()
         result = await session.call_tool(tool, args)
         return _parse_tool_result(result)

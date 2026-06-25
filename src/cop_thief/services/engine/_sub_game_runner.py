@@ -58,7 +58,9 @@ def run_sub_game(
 
     logger.info(
         "Sub-game %d started: cop=%s thief=%s",
-        sub_game_index, board.cop_pos, board.thief_pos,
+        sub_game_index,
+        board.cop_pos,
+        board.thief_pos,
     )
 
     outcome = Outcome.IN_PROGRESS
@@ -90,7 +92,11 @@ def run_sub_game(
     )
     logger.info(
         "Sub-game %d ended: winner=%s moves=%d barriers=%d cop_pts=%d thief_pts=%d",
-        sub_game_index, outcome, result.moves_used, result.barriers_used,
-        result.score.cop, result.score.thief,
+        sub_game_index,
+        outcome,
+        result.moves_used,
+        result.barriers_used,
+        result.score.cop,
+        result.score.thief,
     )
     return result

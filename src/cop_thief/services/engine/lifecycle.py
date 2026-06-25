@@ -84,26 +84,32 @@ def run_full_game(
         except Exception:  # noqa: BLE001
             logger.exception(
                 "Technical failure in sub-game attempt %d (slot %d); retrying.",
-                attempt, sub_index,
+                attempt,
+                sub_index,
             )
             continue
 
         if result.winner not in (Outcome.COP_WIN, Outcome.THIEF_WIN):
             logger.error(
                 "Sub-game attempt %d produced non-terminal outcome %s; retrying.",
-                attempt, result.winner,
+                attempt,
+                result.winner,
             )
             continue
 
         full_result.add(result)
         logger.info(
             "Valid sub-game %d/%d collected (attempt %d).",
-            len(full_result.sub_games), num_games, attempt,
+            len(full_result.sub_games),
+            num_games,
+            attempt,
         )
 
     logger.info(
-        "Full game complete: %d valid sub-games in %d attempts. "
-        "Totals: cop=%d thief=%d.",
-        num_games, attempt, full_result.totals.cop, full_result.totals.thief,
+        "Full game complete: %d valid sub-games in %d attempts. Totals: cop=%d thief=%d.",
+        num_games,
+        attempt,
+        full_result.totals.cop,
+        full_result.totals.thief,
     )
     return full_result

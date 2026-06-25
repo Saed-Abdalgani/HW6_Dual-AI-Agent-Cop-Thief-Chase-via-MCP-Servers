@@ -19,7 +19,10 @@ from cop_thief.shared.gatekeeper import Gatekeeper
 
 class _FailingMcpBackend:
     async def call_tool(
-        self, server: str, tool: str, args: dict[str, Any],
+        self,
+        server: str,
+        tool: str,
+        args: dict[str, Any],
     ) -> dict[str, Any]:
         raise ConnectionError(f"{server} MCP unreachable")
 

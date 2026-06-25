@@ -62,10 +62,16 @@ async def verify_cloud_endpoints(
     revoked = None
     if revoked_token:
         cop_rev = await _expect_failure(
-            gatekeeper, caller, config.mcp.cop_url, revoked_token,
+            gatekeeper,
+            caller,
+            config.mcp.cop_url,
+            revoked_token,
         )
         thief_rev = await _expect_failure(
-            gatekeeper, caller, config.mcp.thief_url, revoked_token,
+            gatekeeper,
+            caller,
+            config.mcp.thief_url,
+            revoked_token,
         )
         revoked = cop_rev and thief_rev
     return CloudVerification(cop_ok, thief_ok, cop_bad, thief_bad, revoked)
